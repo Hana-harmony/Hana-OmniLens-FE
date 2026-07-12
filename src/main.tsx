@@ -547,7 +547,80 @@ function DocsPage({ locale, onLocale, onHome }: { locale: Locale; onLocale: (loc
   const groups = [...new Set(endpoints.map((endpoint) => endpoint.group))]
   const normalizedQuery = query.trim().toLocaleLowerCase(locale === 'ko' ? 'ko-KR' : 'en-US')
   const filtered = endpoints.filter((endpoint) => !normalizedQuery || [endpoint.path, endpoint.group, endpoint.title, endpoint.titleEn, endpoint.description, endpoint.descriptionEn].some((value) => value.toLocaleLowerCase().includes(normalizedQuery)))
-  return <div className="docs-shell"><header className="docs-header"><Wordmark onClick={onHome}/><div className="docs-header-actions"><button className="docs-home" onClick={onHome}>{locale === 'ko' ? '홈' : 'Home'}</button><span className="version">Partner API · REST + WS</span><div className="language-switch"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div></div></header><div className="docs-layout"><aside className="docs-sidebar"><label className="docs-search"><span aria-hidden="true">⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === 'ko' ? 'API 검색' : 'Search APIs'} aria-label={locale === 'ko' ? 'API 검색' : 'Search APIs'}/></label>{groups.map((group) => { const items = filtered.filter((endpoint) => endpoint.group === group); return items.length > 0 && <div className="docs-group" key={group}><b>{group}</b>{items.map((endpoint) => <button className={selected.path === endpoint.path && selected.method === endpoint.method ? 'active' : ''} key={`${endpoint.method}-${endpoint.path}`} onClick={() => setSelected(endpoint)}><span className={`transport-badge ${transportOf(endpoint).toLowerCase()}`}>{transportOf(endpoint)}</span><span className={`method-badge ${endpoint.method.toLowerCase()}`}>{methodLabel(endpoint)}</span><span className="endpoint-title">{locale === 'ko' ? endpoint.title : endpoint.titleEn}</span></button>)}</div> })}{filtered.length === 0 && <p className="docs-empty">{locale === 'ko' ? '검색 결과가 없습니다.' : 'No APIs found.'}</p>}</aside><main className="docs-content"><p className="breadcrumb">Hana OmniLens API / {selected.group}</p><div className="docs-scope">{locale === 'ko' ? '현지 증권사 서버 연동용 계약 · 운영자 수집·발행·재처리·재학습 및 포털 내부 API 제외' : 'Contract for partner brokerage servers · excludes operator collection, publishing, reprocessing, training, and portal-internal APIs'}</div><h1>{locale === 'ko' ? selected.title : selected.titleEn}</h1><p className="docs-description">{locale === 'ko' ? selected.description : selected.descriptionEn}</p><div className="endpoint-bar"><span className={`transport-badge ${transportOf(selected).toLowerCase()}`}>{transportOf(selected)}</span><span className={`method-badge ${selected.method.toLowerCase()}`}>{methodLabel(selected)}</span><code>{selected.path}</code></div><section className="docs-section"><h2>Authentication</h2><p>{locale === 'ko' ? 'API 키와 서명 비밀은 현지 증권사 서버에만 보관합니다. WebSocket도 HTTP Upgrade 요청에 같은 인증 헤더를 전송하며 브라우저·모바일 앱에는 키를 내장하지 않습니다.' : 'Keep API keys and signing secrets only on partner servers. WebSocket HTTP Upgrade requests use the same authentication headers; never embed keys in browsers or mobile apps.'}</p><div className="parameter"><code>mTLS client certificate</code><span>transport · production policy when enabled</span></div><div className="parameter"><code>X-HANA-OMNILENS-API-KEY</code><span>header · required</span></div><div className="parameter"><code>X-HANA-OMNILENS-TIMESTAMP</code><span>header · required when HMAC signing is enabled</span></div><div className="parameter"><code>X-HANA-OMNILENS-NONCE</code><span>header · required when HMAC signing is enabled</span></div><div className="parameter"><code>X-HANA-OMNILENS-SIGNATURE</code><span>header · required when HMAC signing is enabled</span><p>{locale === 'ko' ? '메서드, query 포함 URI, UTC timestamp, nonce, SHA-256 body hash의 canonical 문자열을 HMAC-SHA256으로 서명합니다.' : 'HMAC-SHA256 signs the canonical method, URI including query, UTC timestamp, nonce, and SHA-256 body hash.'}</p></div></section><section className="docs-section"><h2>Request</h2>{selected.fields.length === 0 ? <p>{locale === 'ko' ? '추가 요청 파라미터가 없습니다.' : 'No additional request parameters.'}</p> : selected.fields.map((field, index) => <div className="parameter" key={`${field.location}-${field.name}-${index}`}><code>{field.name}</code><span>{field.location} · {field.type} · {field.required ? 'required' : 'optional'}</span><p>{locale === 'ko' ? field.description : field.descriptionEn}</p></div>)}</section></main><aside className="code-panel"><div className="code-tabs" role="tablist" aria-label="Code examples"><button className={codeTab === 'curl' ? 'active' : ''} onClick={() => setCodeTab('curl')} role="tab" aria-selected={codeTab === 'curl'}>cURL</button><button className={codeTab === 'java' ? 'active' : ''} onClick={() => setCodeTab('java')} role="tab" aria-selected={codeTab === 'java'}>Java 17+</button></div><pre tabIndex={0}><code>{codeTab === 'curl' ? curlExample(selected) : javaExample(selected)}</code></pre><h3>{selected.method === 'WS' ? 'Message' : 'Response'}</h3><pre tabIndex={0}><code>{JSON.stringify(JSON.parse(selected.response), null, 2)}</code></pre></aside></div></div>
+
+  return <div className="docs-shell">
+    <header className="docs-header">
+      <Wordmark onClick={onHome}/>
+      <div className="docs-header-actions">
+        <button className="docs-home" onClick={onHome}>{locale === 'ko' ? '홈' : 'Home'}</button>
+        <span className="version">Partner API · REST + WS</span>
+        <div className="language-switch">
+          <button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button>
+          <button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button>
+        </div>
+      </div>
+    </header>
+    <div className="docs-layout">
+      <aside className="docs-sidebar">
+        <label className="docs-search">
+          <span aria-hidden="true">⌕</span>
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === 'ko' ? 'API 검색' : 'Search APIs'} aria-label={locale === 'ko' ? 'API 검색' : 'Search APIs'}/>
+        </label>
+        {groups.map((group) => {
+          const items = filtered.filter((endpoint) => endpoint.group === group)
+          return items.length > 0 && <div className="docs-group" key={group}>
+            <b>{group}</b>
+            {items.map((endpoint) => <button className={selected.path === endpoint.path && selected.method === endpoint.method ? 'active' : ''} key={`${endpoint.method}-${endpoint.path}`} onClick={() => setSelected(endpoint)}>
+              <span className={`transport-badge ${transportOf(endpoint).toLowerCase()}`}>{transportOf(endpoint)}</span>
+              <span className={`method-badge ${endpoint.method.toLowerCase()}`}>{methodLabel(endpoint)}</span>
+              <span className="endpoint-title">{locale === 'ko' ? endpoint.title : endpoint.titleEn}</span>
+            </button>)}
+          </div>
+        })}
+        {filtered.length === 0 && <p className="docs-empty">{locale === 'ko' ? '검색 결과가 없습니다.' : 'No APIs found.'}</p>}
+      </aside>
+      <main className="docs-content">
+        <p className="breadcrumb">Hana OmniLens API / {selected.group}</p>
+        <div className="docs-scope">{locale === 'ko' ? '현지 증권사 서버 연동용 계약 · 운영자 수집·발행·재처리·재학습 및 포털 내부 API 제외' : 'Contract for partner brokerage servers · excludes operator collection, publishing, reprocessing, training, and portal-internal APIs'}</div>
+        <h1>{locale === 'ko' ? selected.title : selected.titleEn}</h1>
+        <p className="docs-description">{locale === 'ko' ? selected.description : selected.descriptionEn}</p>
+        <div className="endpoint-bar">
+          <span className={`transport-badge ${transportOf(selected).toLowerCase()}`}>{transportOf(selected)}</span>
+          <span className={`method-badge ${selected.method.toLowerCase()}`}>{methodLabel(selected)}</span>
+          <code>{selected.path}</code>
+        </div>
+        <section className="docs-section">
+          <h2>Authentication</h2>
+          <p>{locale === 'ko'
+            ? '발급받은 API 키를 현지 증권사 서버에만 보관하고 모든 REST 요청과 WebSocket Upgrade 요청의 인증 헤더로 전송합니다. 브라우저나 모바일 앱에 키를 내장하지 마세요.'
+            : 'Store the issued API key only on the partner brokerage server and send it in the authentication header for every REST request and WebSocket Upgrade request. Never embed the key in a browser or mobile app.'}</p>
+          <div className="parameter">
+            <code>X-HANA-OMNILENS-API-KEY</code>
+            <span>header · required</span>
+          </div>
+        </section>
+        <section className="docs-section">
+          <h2>Request</h2>
+          {selected.fields.length === 0
+            ? <p>{locale === 'ko' ? '추가 요청 파라미터가 없습니다.' : 'No additional request parameters.'}</p>
+            : selected.fields.map((field, index) => <div className="parameter" key={`${field.location}-${field.name}-${index}`}>
+              <code>{field.name}</code>
+              <span>{field.location} · {field.type} · {field.required ? 'required' : 'optional'}</span>
+              <p>{locale === 'ko' ? field.description : field.descriptionEn}</p>
+            </div>)}
+        </section>
+      </main>
+      <aside className="code-panel">
+        <div className="code-tabs" role="tablist" aria-label="Code examples">
+          <button className={codeTab === 'curl' ? 'active' : ''} onClick={() => setCodeTab('curl')} role="tab" aria-selected={codeTab === 'curl'}>cURL</button>
+          <button className={codeTab === 'java' ? 'active' : ''} onClick={() => setCodeTab('java')} role="tab" aria-selected={codeTab === 'java'}>Java 17+</button>
+        </div>
+        <pre tabIndex={0}><code>{codeTab === 'curl' ? curlExample(selected) : javaExample(selected)}</code></pre>
+        <h3>{selected.method === 'WS' ? 'Message' : 'Response'}</h3>
+        <pre tabIndex={0}><code>{JSON.stringify(JSON.parse(selected.response), null, 2)}</code></pre>
+      </aside>
+    </div>
+  </div>
 }
 
 function AuthPage({ locale, onLocale, onAuthenticated, onHome }: { locale: Locale; onLocale: (locale: Locale) => void; onAuthenticated: (session: Session) => void; onHome: () => void }) {
