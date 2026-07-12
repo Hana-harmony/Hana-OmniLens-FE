@@ -19,7 +19,7 @@ const copy = {
     intro: '시세, 뉴스·공시 인텔리전스, 금융 고유어, 글로벌 세무 OCR을 안정적인 파트너 API로 제공합니다.',
     start: 'API 키 신청', explore: '개발자 문서 보기', trust: '실제 거래소 서비스에서 검증된 API',
     capabilities: '파트너 서비스에 필요한 핵심 기능', capabilityIntro: '하나금융의 데이터와 Hana Montana AI를 하나의 API 계약으로 연결합니다.',
-    cases: '구현된 서비스로 확인하세요', casesIntro: '샘플 목업이 아닌, Hana OmniLens API와 연동된 현지 거래소의 실제 화면입니다.',
+    cases: '구현된 서비스로 확인하세요', casesIntro: 'Hana OmniLens API와 연동된 현지 거래소의 실제 화면에서 세 가지 핵심 기능을 확인하세요.',
     ai: 'Hana Montana', aiTitle: 'OmniLens의 금융 AI 모델', aiBody: '뉴스 분석, 문맥 번역, 고유어 설명, 세무 문서 OCR과 위변조 위험 판단을 수행하는 Hana OmniLens API 서버의 전용 AI 모델입니다.',
   },
   en: {
@@ -28,7 +28,7 @@ const copy = {
     intro: 'Deliver live prices, news and disclosure intelligence, contextual terminology, and global tax OCR through one dependable partner API.',
     start: 'Request an API key', explore: 'Explore API docs', trust: 'Proven in a production-grade exchange experience',
     capabilities: 'Core intelligence for partner products', capabilityIntro: 'Hana Financial data and Hana Montana AI, delivered through one stable API contract.',
-    cases: 'See it working in a real product', casesIntro: 'These are live screens from the local exchange integrated with Hana OmniLens API—not sample mockups.',
+    cases: 'See it working in a real product', casesIntro: 'Explore three core capabilities through live screens from the local exchange integrated with Hana OmniLens API.',
     ai: 'Hana Montana', aiTitle: 'The financial AI behind OmniLens', aiBody: 'The dedicated Hana OmniLens server model for news analysis, contextual translation, terminology, tax-document OCR, and fraud-risk assessment.',
   },
 } as const
@@ -85,8 +85,10 @@ function App() {
 function Header({ locale, onLocale, navigate, session }: { locale: Locale; onLocale: (locale: Locale) => void; navigate: (route: Route) => void; session?: Session | null }) {
   const t = copy[locale]
   const scrollTo = (id: string) => { navigate('home'); window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0) }
-  return <header className="topbar"><button className="brand-button" onClick={() => navigate('home')}><img src="/brand/hana-omnilens-api.png" alt="Hana OmniLens API" /></button><nav><button onClick={() => scrollTo('capabilities')}>{t.nav[0]}</button><button onClick={() => scrollTo('use-cases')}>{t.nav[1]}</button><button onClick={() => scrollTo('ai-model')}>{t.nav[2]}</button><button onClick={() => navigate('docs')}>{t.docs}</button></nav><div className="header-actions"><button className="admin-link" onClick={() => navigate('admin')}>{locale === 'ko' ? '관리자 백오피스' : 'Admin'}</button><div className="language-switch" aria-label="Language"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div><button className="login-button" onClick={() => navigate(session ? (session.user.role === 'ADMIN' ? 'admin' : 'portal') : 'auth')}>{session ? session.user.name : t.login}</button></div></header>
+  return <header className="topbar"><Wordmark onClick={() => navigate('home')}/><nav><button onClick={() => scrollTo('capabilities')}>{t.nav[0]}</button><button onClick={() => scrollTo('use-cases')}>{t.nav[1]}</button><button onClick={() => scrollTo('ai-model')}>{t.nav[2]}</button><button onClick={() => navigate('docs')}>{t.docs}</button></nav><div className="header-actions"><button className="admin-link" onClick={() => navigate('admin')}>{locale === 'ko' ? '관리자 백오피스' : 'Admin'}</button><div className="language-switch" aria-label="Language"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div><button className="login-button" onClick={() => navigate(session ? (session.user.role === 'ADMIN' ? 'admin' : 'portal') : 'auth')}>{session ? session.user.name : t.login}</button></div></header>
 }
+
+function Wordmark({ onClick, inverse = false }: { onClick: () => void; inverse?: boolean }) { return <button className={`wordmark${inverse ? ' inverse' : ''}`} onClick={onClick} aria-label="Hana OmniLens API 홈"><span>Hana</span><b>OmniLens</b><i>API</i></button> }
 
 function Home({ locale, onLocale, navigate, session }: { locale: Locale; onLocale: (locale: Locale) => void; navigate: (route: Route) => void; session: Session | null }) {
   const t = copy[locale]
@@ -94,14 +96,47 @@ function Home({ locale, onLocale, navigate, session }: { locale: Locale; onLocal
     <section className="hero"><div className="orb orb-one"/><div className="orb orb-two"/><div className="hero-copy"><p className="eyebrow">{t.heroTag}</p><h1>{t.hero.split('\n').map((line) => <span key={line}>{line}<br/></span>)}<em>{t.accent}</em></h1><p>{t.intro}</p><div className="actions"><button className="primary" onClick={() => navigate(session ? 'portal' : 'auth')}>{t.start}<span>→</span></button><button className="secondary" onClick={() => navigate('docs')}>{t.explore}</button></div><div className="trust-line"><span className="pulse-dot"/>{t.trust}</div></div><div className="hero-visual"><div className="data-ring ring-one"/><div className="data-ring ring-two"/><img className="hero-logo" src="/brand/hana-omnilens-api.png" alt="Hana OmniLens API characters"/><div className="floating-card card-market"><span>MARKET</span><b>KOSPI 7,475.94</b><i>+2.52%</i></div><div className="floating-card card-signal"><span>AI SIGNAL</span><b>High materiality</b><small>Disclosure detected</small></div></div></section>
     <div className="ticker"><div>LIVE MARKET DATA <b>·</b> K-NEWS INTELLIGENCE <b>·</b> DISCLOSURES <b>·</b> TAX OCR <b>·</b> CONTEXTUAL TERMS <b>·</b> REAL-TIME ALERTS <b>·</b></div></div>
     <section id="capabilities" className="section"><p className="eyebrow">API CAPABILITIES</p><div className="section-head"><h2>{t.capabilities}</h2><p>{t.capabilityIntro}</p></div><div className="capability-grid"><Capability icon="↗" number="01" title={locale === 'ko' ? '실시간 시장 데이터' : 'Live market data'} body={locale === 'ko' ? '시세, 지수, 호가와 매매 제한을 일관된 계약으로 제공합니다.' : 'Quotes, indices, order books, and trading restrictions through one contract.'}/><Capability icon="✦" number="02" title={locale === 'ko' ? '뉴스·공시 인텔리전스' : 'News & disclosures'} body={locale === 'ko' ? '번역 전문, 감성, 중요도와 AI 분석을 함께 제공합니다.' : 'Translated full text, sentiment, materiality, and AI analysis.'}/><Capability icon="◎" number="03" title={locale === 'ko' ? '글로벌 세무 OCR' : 'Global tax OCR'} body={locale === 'ko' ? '3종 세무 서류의 OCR·위변조 위험·필수값을 검증합니다.' : 'OCR and risk validation for three essential tax documents.'}/><Capability icon="⌁" number="04" title={locale === 'ko' ? '고유어·실시간 알림' : 'Terms & live alerts'} body={locale === 'ko' ? '문맥 설명과 보유·관심종목 이벤트를 실시간 전달합니다.' : 'Contextual term guidance and portfolio-aware real-time alerts.'}/></div></section>
-    <section id="use-cases" className="showcase-section"><p className="eyebrow">LIVE IMPLEMENTATION</p><div className="section-head"><h2>{t.cases}</h2><p>{t.casesIntro}</p></div><div className="showcase-grid"><Showcase image="/showcase/exchange-quotes.png" tag="MARKET DATA API" title={locale === 'ko' ? '실시간 시세와 시장 지수' : 'Live quotes and indices'}/><Showcase image="/showcase/exchange-market.png" tag="K-NEWS API" title={locale === 'ko' ? '감성·중요도 기반 뉴스' : 'Sentiment-aware K-News'}/><Showcase image="/showcase/exchange-news.png" tag="HANA MONTANA AI" title={locale === 'ko' ? '문맥 번역과 AI 분석' : 'Contextual translation & AI'}/></div></section>
+    <ProductStory locale={locale} title={t.cases} intro={t.casesIntro}/>
     <section id="ai-model" className="ai-section"><div className="ai-logo-wrap"><div className="ai-glow"/><img src="/brand/hana-montana.png" alt="Hana Montana AI model"/></div><div><p className="eyebrow">FINANCIAL AI MODEL</p><h2>{t.aiTitle}</h2><p>{t.aiBody}</p><div className="model-pills"><span>Context Translation</span><span>Tax OCR</span><span>Sentiment</span><span>Fraud Risk</span></div><button className="text-link" onClick={() => navigate('docs')}>{locale === 'ko' ? 'AI API 살펴보기' : 'Explore AI APIs'} →</button></div></section>
+    <ModelPerformance locale={locale}/>
     <section className="cta"><img src="/brand/hana-omnilens-api.png" alt=""/><div><p className="eyebrow">BUILD WITH HANA</p><h2>{locale === 'ko' ? '한국 금융 인텔리전스를 서비스에 연결하세요.' : 'Connect Korean financial intelligence to your product.'}</h2></div><button className="primary light" onClick={() => navigate('auth')}>{t.start} →</button></section>
   </main><Footer locale={locale}/></div>
 }
 
 function Capability({ icon, number, title, body }: { icon: string; number: string; title: string; body: string }) { return <article className="capability"><div className="capability-icon">{icon}</div><span>{number}</span><h3>{title}</h3><p>{body}</p></article> }
 function Showcase({ image, tag, title }: { image: string; tag: string; title: string }) { return <article className="showcase-card"><div className="screen-wrap"><img src={image} alt={title}/><div className="screen-shine"/></div><span>{tag}</span><h3>{title}</h3></article> }
+
+function ProductStory({ locale, title, intro }: { locale: Locale; title: string; intro: string }) {
+  const [active, setActive] = useState(0)
+  useEffect(() => { const elements = [...document.querySelectorAll<HTMLElement>('[data-story-step]')]; const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.storyStep)) }), { rootMargin: '-38% 0px -38% 0px' }); elements.forEach((element) => observer.observe(element)); return () => observer.disconnect() }, [])
+  const stories = locale === 'ko' ? [
+    { tag: '핵심 기능 01', title: '한국 주식 뉴스·공시 인텔리전스', body: '원문 문단을 보존한 영문 전문과 함께 종목, 이벤트, 감성, 중요도, What·Why·Impact를 제공합니다.', detail: '감성·중요도 라벨과 Hana Montana 분석이 같은 뉴스 문맥에서 연결됩니다.', image: '/showcase/exchange-market.png', focus: 'focus-news' },
+    { tag: '핵심 기능 02', title: '실시간 주식 정보 및 주문 제한 필터링', body: 'KIS·KRX 기반 시세, 지수, 호가와 외국인 한도·VI·거래정지 신호를 하나의 계약으로 전달합니다.', detail: '시장 지수와 종목 시세를 실시간으로 읽고 주문 전 제한 근거까지 확인합니다.', image: '/showcase/exchange-quotes.png', focus: 'focus-quotes' },
+    { tag: '핵심 기능 03', title: '글로벌 세무 처리 자동화', body: '거주자 증명서, 아포스티유, 제한세율 적용신청서를 OCR로 읽고 필수값·일관성·위변조 위험을 검증합니다.', detail: '세 문서가 모두 검증된 경우에만 환급 신청 상태가 다음 단계로 진행됩니다.', image: '/showcase/exchange-tax.png', focus: 'focus-tax' },
+  ] : [
+    { tag: 'CORE 01', title: 'Korean news & disclosure intelligence', body: 'Preserved English full text with stock linking, event, sentiment, materiality, and What·Why·Impact analysis.', detail: 'Sentiment, materiality, and Hana Montana analysis stay connected to the same source context.', image: '/showcase/exchange-market.png', focus: 'focus-news' },
+    { tag: 'CORE 02', title: 'Live market data & orderability signals', body: 'KIS and KRX quotes, indices, order books, foreign limits, VI, and suspension signals through one contract.', detail: 'Read market movement in real time and understand restrictions before an order.', image: '/showcase/exchange-quotes.png', focus: 'focus-quotes' },
+    { tag: 'CORE 03', title: 'Global tax automation', body: 'OCR validation for residence certificates, apostilles, and reduced withholding applications.', detail: 'The refund workflow advances only after all three documents pass validation.', image: '/showcase/exchange-tax.png', focus: 'focus-tax' },
+  ]
+  return <section id="use-cases" className="product-story"><div className="story-heading"><p className="eyebrow">LIVE IMPLEMENTATION</p><h2>{title}</h2><p>{intro}</p></div><div className="story-layout"><div className="story-copy">{stories.map((story, index) => <article key={story.tag} data-story-step={index} className={active === index ? 'active' : ''}><span>{story.tag}</span><h3>{story.title}</h3><p>{story.body}</p><small>{story.detail}</small></article>)}</div><div className="story-stage"><div className="device-frame">{stories.map((story, index) => <div className={`story-screen ${story.focus}${active === index ? ' active' : ''}`} key={story.tag}><img src={story.image} alt={story.title}/><span className="focus-ring"/><div className="story-caption"><b>{story.tag}</b><span>{story.detail}</span></div></div>)}</div><div className="story-progress">{stories.map((story, index) => <span className={active === index ? 'active' : ''} key={story.tag}/>)}</div></div></div></section>
+}
+
+function ModelPerformance({ locale }: { locale: Locale }) {
+  const rows = locale === 'ko' ? [
+    ['뉴스·공시 이벤트 분류', 'Event macro F1', '0.9844', '768건 benchmark'],
+    ['실제 뉴스 이벤트 분류', 'Event macro F1', '0.9221', '80건 gold set'],
+    ['감성 / 중요도 분류', 'Accuracy', '0.9750 / 0.9625', '실제 뉴스 gold'],
+    ['글로벌 피어 프로파일', '추론 성공', '2,752 / 2,752', 'KIS 활성 일반주식'],
+    ['외국인 보유수량 예측', 'MAE 개선', '4.40%', 'Persistence 대비'],
+  ] : [
+    ['News & disclosure events', 'Event macro F1', '0.9844', '768-item benchmark'],
+    ['Real-news event analysis', 'Event macro F1', '0.9221', '80-item gold set'],
+    ['Sentiment / materiality', 'Accuracy', '0.9750 / 0.9625', 'Real-news gold'],
+    ['Global peer profiles', 'Inference coverage', '2,752 / 2,752', 'Active KIS common stocks'],
+    ['Foreign ownership forecast', 'MAE improvement', '4.40%', 'vs. persistence'],
+  ]
+  return <section className="performance-section"><div className="performance-head"><p className="eyebrow">EVALUATED, NOT CLAIMED</p><h2>{locale === 'ko' ? '측정 가능한 Hana Montana 성능' : 'Measurable Hana Montana performance'}</h2><p>{locale === 'ko' ? '저장소의 버전 관리된 평가 리포트와 동일한 수치만 표시합니다.' : 'Only metrics backed by versioned evaluation reports are shown.'}</p></div><div className="performance-table"><div className="performance-row head"><span>{locale === 'ko' ? '모델 기능' : 'Capability'}</span><span>{locale === 'ko' ? '평가 지표' : 'Metric'}</span><span>{locale === 'ko' ? '결과' : 'Result'}</span><span>{locale === 'ko' ? '평가 조건' : 'Evaluation set'}</span></div>{rows.map((row) => <div className="performance-row" key={row[0]}>{row.map((cell, index) => <span className={index === 2 ? 'metric' : ''} key={cell}>{cell}</span>)}</div>)}</div><p className="metric-note">{locale === 'ko' ? '평가 수치는 모델 버전과 데이터셋 계보에 종속되며 실제 주문 승인이나 세무 판단을 대신하지 않습니다.' : 'Metrics are tied to model versions and dataset lineage; they do not approve trades or replace tax decisions.'}</p></section>
+}
 
 function DocsPage({ locale, onLocale, onHome }: { locale: Locale; onLocale: (locale: Locale) => void; onHome: () => void }) {
   const [selected, setSelected] = useState(endpoints[0])
