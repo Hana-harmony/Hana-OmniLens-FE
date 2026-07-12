@@ -66,3 +66,5 @@ npm run build
 ```
 
 `npm run build`는 TypeScript 프로젝트 검사와 Vite 운영 빌드를 모두 수행한다.
+
+GitHub Actions는 `feature`/`main` 대상 PR과 push에서 Node.js 24, `npm ci`, 운영 의존성 보안 감사, TypeScript/Vite 빌드를 필수 체크로 실행한다.
