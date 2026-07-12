@@ -14,7 +14,7 @@ type TaxCase = { caseId: string; accountId: string; taxYear: number; treatyCount
 type RequestField = { name: string; location: 'path' | 'query' | 'body'; type: string; required?: boolean; description: string; descriptionEn: string }
 type Endpoint = {
   group: string
-  method: 'GET' | 'POST' | 'WS'
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'WS'
   path: string
   title: string
   titleEn: string
@@ -23,6 +23,7 @@ type Endpoint = {
   fields: RequestField[]
   requestBody?: string
   response: string
+  protocol?: 'RAW_JSON' | 'STOMP'
 }
 
 const copy = {
@@ -48,6 +49,44 @@ const copy = {
 
 const endpoints: Endpoint[] = [
   {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/search', title: '국내 종목 검색', titleEn: 'Search Korean stocks',
+    description: '종목 코드·국문명·영문명으로 지원 종목을 검색합니다.', descriptionEn: 'Searches supported stocks by code, Korean name, or English name.',
+    fields: [{ name: 'query', location: 'query', type: 'string', required: true, description: '검색어 1~40자', descriptionEn: 'Search text from 1 to 40 characters' }],
+    response: `{"success":true,"status":200,"data":[{"stockCode":"005930","stockName":"삼성전자","stockNameEn":"Samsung Electronics","market":"KOSPI"}]}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}', title: '종목 기본정보', titleEn: 'Stock master',
+    description: '지원 종목의 명칭·시장·ISIN·DART 법인 코드를 조회합니다.', descriptionEn: 'Returns name, market, ISIN, and DART corporation code for a supported stock.',
+    fields: [{ name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' }],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","stockName":"삼성전자","market":"KOSPI","isinCode":"KR7005930003"}}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/quote', title: '단일 종목 현재가', titleEn: 'Single-stock quote',
+    description: '현재가·시간외 시세·환산가·외국인 보유 현황을 조회합니다.', descriptionEn: 'Returns live, after-hours, converted, and foreign-ownership quote fields.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'currency', location: 'query', type: 'ISO 4217', description: '환산 통화, 기본값 USD', descriptionEn: 'Local currency; defaults to USD' },
+      { name: 'fxRate', location: 'query', type: 'decimal > 0', description: '선택적 KRW 환산율', descriptionEn: 'Optional KRW conversion rate' },
+    ],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","currentPriceKrw":75000,"localCurrency":"USD","foreignOwnershipRate":51.2,"source":"KIS"}}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/detail', title: '종목 상세 화면 데이터', titleEn: 'Stock detail view',
+    description: '시세·환산가·외국인 보유 예측·VI·가격 제한·거래정지 정보를 하나의 응답으로 제공합니다.', descriptionEn: 'Returns quote, FX, foreign-ownership prediction, VI, price-limit, and halt fields in one response.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'currency', location: 'query', type: 'ISO 4217', description: '환산 통화, 기본값 USD', descriptionEn: 'Local currency; defaults to USD' },
+      { name: 'fxRate', location: 'query', type: 'decimal > 0', description: '선택적 KRW 환산율', descriptionEn: 'Optional KRW conversion rate' },
+    ],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","predictedForeignOwnershipRateMin":50.8,"predictedForeignOwnershipRateMax":51.6,"viActive":false,"tradingHalted":false,"orderable":true}}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/global-peers', title: '글로벌 피어 매칭', titleEn: 'Global peer matching',
+    description: '검증된 글로벌 비교기업·비교 차원·핵심 강점과 모델 신뢰도를 조회합니다.', descriptionEn: 'Returns validated global peers, comparison dimensions, key strengths, and model confidence.',
+    fields: [{ name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' }],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","primaryPeer":{},"peers":[],"comparisons":[],"keyStrengths":[],"modelVersion":"<MODEL_VERSION>"}}`,
+  },
+  {
     group: 'Market Data', method: 'GET', path: '/api/v1/market/quotes', title: '복수 종목 현재가', titleEn: 'Multi-stock quotes',
     description: '전체 또는 요청한 국내 종목의 현재가와 요청 통화 환산가를 조회합니다.', descriptionEn: 'Returns all or selected Korean stock quotes with converted prices.',
     fields: [
@@ -56,18 +95,88 @@ const endpoints: Endpoint[] = [
       { name: 'currency', location: 'query', type: 'ISO 4217', description: '환산 통화, 기본값 USD', descriptionEn: 'Quote currency; defaults to USD' },
       { name: 'limit', location: 'query', type: 'integer', description: '응답 개수 1~2,000, 기본값 500', descriptionEn: 'Result size from 1 to 2,000; defaults to 500' },
     ],
-    response: `{"success":true,"status":200,"data":[{"stockCode":"005930","stockName":"삼성전자","currency":"USD","marketStatus":"OPEN"}]}`,
+    response: `{"success":true,"status":200,"data":[{"stockCode":"005930","stockName":"삼성전자","currentPriceKrw":75000,"localCurrency":"USD","localCurrencyPrice":54.3,"source":"KIS"}]}`,
   },
   {
     group: 'Market Data', method: 'GET', path: '/api/v1/market/indices', title: '국내 시장 지수', titleEn: 'Korean market indices',
     description: 'KOSPI·KOSDAQ·KOSPI 200 실시간 스냅샷을 조회합니다.', descriptionEn: 'Returns live KOSPI, KOSDAQ, and KOSPI 200 snapshots.', fields: [],
-    response: `{"success":true,"status":200,"data":[{"indexCode":"0001","indexName":"KOSPI","marketStatus":"OPEN"}]}`,
+    response: `{"success":true,"status":200,"data":[{"indexCode":"0001","indexName":"KOSPI","currentValue":3200.15,"changeRate":0.83,"source":"KIS_REALTIME"}]}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/indices/{indexCode}/intraday', title: '시장 지수 당일 분봉', titleEn: 'Index intraday bars',
+    description: 'KOSPI·KOSDAQ·KOSPI 200의 당일 분봉 OHLC와 거래량을 조회합니다.', descriptionEn: 'Returns intraday OHLC and volume bars for KOSPI, KOSDAQ, or KOSPI 200.',
+    fields: [
+      { name: 'indexCode', location: 'path', type: '0001 | 1001 | 2001', required: true, description: '시장 지수 코드', descriptionEn: 'Market index code' },
+      { name: 'date', location: 'query', type: 'YYYY-MM-DD', description: '조회일, 미입력 시 당일', descriptionEn: 'Date; defaults to today' },
+      { name: 'limit', location: 'query', type: 'integer 1~600', description: '분봉 수, 기본값 390', descriptionEn: 'Bar count; defaults to 390' },
+    ],
+    response: `{"success":true,"status":200,"data":[{"indexCode":"0001","bucketStart":"2026-07-12T09:01:00","openValue":3200.1,"closeValue":3201.2,"source":"KIS"}]}`,
   },
   {
     group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/orderbook', title: '종목 호가', titleEn: 'Stock order book',
     description: '종목별 매수·매도 호가와 잔량을 조회합니다.', descriptionEn: 'Returns bid and ask levels with remaining quantities.',
     fields: [{ name: 'stockCode', location: 'path', type: 'string', required: true, description: '한국거래소 6자리 종목 코드', descriptionEn: 'Six-digit Korea Exchange stock code' }],
-    response: `{"success":true,"status":200,"data":{"stockCode":"005930","asks":[],"bids":[]}}`,
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","asks":[{"priceKrw":75100,"quantity":1200}],"bids":[{"priceKrw":75000,"quantity":950}],"source":"KIS"}}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/orderability', title: '주문 가능 경계 확인', titleEn: 'Orderability boundary',
+    description: '현지 모의 주문 전에 외국인 한도·VI·가격제한·거래정지 경계를 확인합니다. 실제 주문을 실행하지 않습니다.', descriptionEn: 'Checks foreign-limit, VI, price-limit, and halt boundaries before partner-side mock orders; it does not place orders.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'side', location: 'query', type: 'BUY | SELL', required: true, description: '주문 방향', descriptionEn: 'Order side' },
+      { name: 'quantity', location: 'query', type: 'integer >= 1', required: true, description: '주문 수량', descriptionEn: 'Order quantity' },
+    ],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","side":"BUY","quantity":10,"orderable":true,"foreignLimitExceeded":false,"viActive":false}}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/history', title: '종목 일봉 OHLCV', titleEn: 'Daily OHLCV history',
+    description: 'KRX 기반 일봉 시가·고가·저가·종가·거래량을 조회합니다.', descriptionEn: 'Returns KRX-based daily OHLCV history.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'from', location: 'query', type: 'YYYY-MM-DD', description: '시작일', descriptionEn: 'Start date' },
+      { name: 'to', location: 'query', type: 'YYYY-MM-DD', description: '종료일', descriptionEn: 'End date' },
+      { name: 'limit', location: 'query', type: 'integer 1~5000', description: '응답 개수, 기본값 365', descriptionEn: 'Result size; defaults to 365' },
+    ],
+    response: `{"success":true,"status":200,"data":[{"stockCode":"005930","tradeDate":"2026-07-11","openPriceKrw":74500,"closePriceKrw":75000,"tradingVolume":1234567,"source":"KRX"}]}`,
+  },
+  {
+    group: 'Market Data', method: 'GET', path: '/api/v1/market/stocks/{stockCode}/intraday', title: '종목 당일 분봉 OHLCV', titleEn: 'Stock intraday OHLCV',
+    description: 'KIS 기반 종목 분봉 시가·고가·저가·종가·거래량을 조회합니다.', descriptionEn: 'Returns KIS-based stock intraday OHLCV bars.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'date', location: 'query', type: 'YYYY-MM-DD', description: '조회일, 미입력 시 당일', descriptionEn: 'Date; defaults to today' },
+      { name: 'limit', location: 'query', type: 'integer 1~600', description: '분봉 수, 기본값 390', descriptionEn: 'Bar count; defaults to 390' },
+      { name: 'fetchMissing', location: 'query', type: 'boolean', description: '누락 데이터 공급자 조회 여부, 기본값 true', descriptionEn: 'Fetch missing bars from provider; defaults to true' },
+    ],
+    response: `{"success":true,"status":200,"data":[{"stockCode":"005930","bucketStart":"2026-07-12T09:01:00","openPriceKrw":75000,"closePriceKrw":75100,"source":"KIS"}]}`,
+  },
+  {
+    group: 'Market Data', method: 'POST', path: '/api/v1/market/stocks/{stockCode}/realtime-subscription', title: '실시간 시세 원천 구독', titleEn: 'Subscribe realtime source',
+    description: '해당 종목의 KIS 실시간 체결 원천 구독을 시작하고 시세 WebSocket 전달을 준비합니다.', descriptionEn: 'Starts the KIS realtime source subscription used by the market quote WebSocket.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'session', location: 'query', type: 'REGULAR | AFTER_HOURS_REAL', description: '거래 세션, 기본값 REGULAR', descriptionEn: 'Trading session; defaults to REGULAR' },
+    ],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","subscribed":true,"session":"REGULAR"}}`,
+  },
+  {
+    group: 'Market Data', method: 'DELETE', path: '/api/v1/market/stocks/{stockCode}/realtime-subscription', title: '실시간 시세 원천 구독 해제', titleEn: 'Unsubscribe realtime source',
+    description: '해당 종목의 KIS 실시간 체결 원천 구독을 해제합니다.', descriptionEn: 'Stops the KIS realtime source subscription for a stock.',
+    fields: [
+      { name: 'stockCode', location: 'path', type: 'string', required: true, description: '6자리 종목 코드', descriptionEn: 'Six-digit stock code' },
+      { name: 'session', location: 'query', type: 'REGULAR | AFTER_HOURS_REAL', description: '거래 세션, 기본값 REGULAR', descriptionEn: 'Trading session; defaults to REGULAR' },
+    ],
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","subscribed":false,"session":"REGULAR"}}`,
+  },
+  {
+    group: 'Market Data', method: 'PUT', path: '/api/v1/market/exchange-rates/{currency}', title: '파트너 환율 저장', titleEn: 'Store partner FX rate',
+    description: '파트너가 사용하는 KRW 대비 현지통화 환율을 저장합니다.', descriptionEn: 'Stores a partner-provided KRW-to-local-currency rate.',
+    fields: [
+      { name: 'currency', location: 'path', type: 'ISO 4217', required: true, description: '현지통화 코드', descriptionEn: 'Local currency code' },
+      { name: 'fxRate', location: 'body', type: 'decimal > 0', required: true, description: 'KRW 환산율', descriptionEn: 'KRW conversion rate' },
+    ],
+    requestBody: `{"fxRate":0.00072}`,
+    response: `{"success":true,"status":200,"data":{"currency":"USD","fxRate":0.00072,"source":"PARTNER"}}`,
   },
   {
     group: 'Intelligence', method: 'GET', path: '/api/v1/market/news', title: '한국 시장 뉴스', titleEn: 'Korean market news',
@@ -76,7 +185,38 @@ const endpoints: Endpoint[] = [
       { name: 'limit', location: 'query', type: 'integer', description: '응답 개수 1~100, 기본값 20', descriptionEn: 'Result size from 1 to 100; defaults to 20' },
       { name: 'cursor', location: 'query', type: 'string', description: '다음 페이지 커서, 최대 512자', descriptionEn: 'Optional next-page cursor, up to 512 characters' },
     ],
-    response: `{"success":true,"status":200,"data":{"items":[],"nextCursor":null}}`,
+    response: `{"success":true,"status":200,"data":{"count":1,"news":[{"newsId":"NEWS-...","title":"...","translatedTitle":"...","sentiment":"POSITIVE","importance":"HIGH","contentAvailability":"FULL_TEXT"}],"nextCursor":null}}`,
+  },
+  {
+    group: 'Intelligence', method: 'GET', path: '/api/v1/market/news/trending', title: '인기 한국 시장 뉴스', titleEn: 'Trending Korean market news',
+    description: '최근 상세 조회 수를 기준으로 한국 시장 뉴스를 정렬합니다.', descriptionEn: 'Ranks Korean market news by recent detail views.',
+    fields: [
+      { name: 'windowHours', location: 'query', type: 'integer 1~720', description: '집계 시간, 기본값 24', descriptionEn: 'Ranking window in hours; defaults to 24' },
+      { name: 'limit', location: 'query', type: 'integer 1~100', description: '응답 개수, 기본값 10', descriptionEn: 'Result size; defaults to 10' },
+    ],
+    response: `{"success":true,"status":200,"data":{"count":1,"news":[{"newsId":"NEWS-...","title":"...","publishedAt":"2026-07-12T00:00:00Z"}]}}`,
+  },
+  {
+    group: 'Intelligence', method: 'GET', path: '/api/v1/market/news/{newsId}', title: '한국 시장 뉴스 상세', titleEn: 'Korean market news detail',
+    description: '표시 가능한 뉴스 전문·번역·What/Why/Impact·고유어 해설을 조회하고 조회 수를 기록합니다.', descriptionEn: 'Returns displayable full text, translation, What/Why/Impact, and glossary data and records a view.',
+    fields: [{ name: 'newsId', location: 'path', type: 'string', required: true, description: '뉴스 ID, 최대 80자', descriptionEn: 'News ID, up to 80 characters' }],
+    response: `{"success":true,"status":200,"data":{"newsId":"NEWS-...","originalContent":"...","translatedContent":"...","summaryLines":{"what":"...","why":"...","impact":"..."},"glossaryTerms":[]}}`,
+  },
+  {
+    group: 'Intelligence', method: 'GET', path: '/api/v1/alerts/watchlists/{partnerId}', title: '파트너 관심종목 조회', titleEn: 'Get partner watchlist',
+    description: '인증된 파트너의 실시간 뉴스·공시 수집 대상 종목을 조회합니다.', descriptionEn: 'Returns the authenticated partner watchlist used for alert collection.',
+    fields: [{ name: 'partnerId', location: 'path', type: 'string', required: true, description: '발급된 파트너 ID', descriptionEn: 'Issued partner ID' }],
+    response: `{"success":true,"status":200,"data":{"partnerId":"demo-partner","stockCodes":["005930"],"updatedAt":"2026-07-12T00:00:00Z"}}`,
+  },
+  {
+    group: 'Intelligence', method: 'PUT', path: '/api/v1/alerts/watchlists/{partnerId}', title: '파트너 관심종목 교체', titleEn: 'Replace partner watchlist',
+    description: '인증된 파트너의 관심종목 전체 목록을 교체합니다. 빈 배열은 목록을 비웁니다.', descriptionEn: 'Replaces the authenticated partner watchlist; an empty array clears it.',
+    fields: [
+      { name: 'partnerId', location: 'path', type: 'string', required: true, description: '발급된 파트너 ID', descriptionEn: 'Issued partner ID' },
+      { name: 'stockCodes', location: 'body', type: 'string[]', required: true, description: '6자리 종목 코드 목록', descriptionEn: 'List of six-digit stock codes' },
+    ],
+    requestBody: `{"stockCodes":["005930","000660"]}`,
+    response: `{"success":true,"status":200,"data":{"partnerId":"demo-partner","stockCodes":["005930","000660"]}}`,
   },
   {
     group: 'Intelligence', method: 'GET', path: '/api/v1/alerts/stocks/{stockCode}/events', title: '종목별 뉴스·공시 이벤트', titleEn: 'Stock news and disclosure events',
@@ -86,7 +226,13 @@ const endpoints: Endpoint[] = [
       { name: 'limit', location: 'query', type: 'integer', description: '응답 개수, 기본값 20', descriptionEn: 'Result size; defaults to 20' },
       { name: 'cursor', location: 'query', type: 'string', description: '다음 페이지 커서, 최대 512자', descriptionEn: 'Optional next-page cursor, up to 512 characters' },
     ],
-    response: `{"success":true,"status":200,"data":{"items":[],"nextCursor":null}}`,
+    response: `{"success":true,"status":200,"data":{"stockCode":"005930","events":[{"alertId":"ALERT-...","sourceType":"NEWS","sentiment":"POSITIVE","importance":"HIGH"}],"nextCursor":null}}`,
+  },
+  {
+    group: 'Intelligence', method: 'GET', path: '/api/v1/alerts/events/{alertId}', title: '뉴스·공시 이벤트 상세', titleEn: 'Alert event detail',
+    description: '저장된 뉴스·공시 이벤트의 원문·번역·분류·신뢰도와 타깃 정보를 조회합니다.', descriptionEn: 'Returns stored alert source, translation, classification, confidence, and targeting fields.',
+    fields: [{ name: 'alertId', location: 'path', type: 'string', required: true, description: '이벤트 ID, 최대 80자', descriptionEn: 'Alert ID, up to 80 characters' }],
+    response: `{"success":true,"status":200,"data":{"alertId":"ALERT-...","stockCode":"005930","sourceType":"DISCLOSURE","summaryLines":{"what":"...","why":"...","impact":"..."},"holderTarget":true,"watchlistTarget":true}}`,
   },
   {
     group: 'AI', method: 'POST', path: '/api/v1/korean-financial-terms/explain', title: '한국 금융 용어 해설', titleEn: 'Korean financial term explanation',
@@ -111,13 +257,59 @@ const endpoints: Endpoint[] = [
       { name: 'contentType', location: 'body', type: 'string', description: '실제 MIME 유형', descriptionEn: 'Detected MIME type' },
       { name: 'expectedResidencyCountry', location: 'body', type: 'ISO 3166-1 alpha-2', description: '기대 거주지 국가', descriptionEn: 'Expected residency country' },
     ],
-    requestBody: `{"documentType":"RESIDENCY_CERTIFICATE","fileName":"resident-***.pdf","documentContentBase64":"<BASE64_DOCUMENT>","contentType":"application/pdf","expectedResidencyCountry":"US"}`,
-    response: `{"success":true,"status":200,"data":{"status":"REVIEW_REQUIRED","missingFields":[],"modelVersion":"<MODEL_VERSION>"}}`,
+    requestBody: `{"documentType":"RESIDENCE_CERTIFICATE","fileName":"resident-***.pdf","documentContentBase64":"<BASE64_DOCUMENT>","contentType":"application/pdf","expectedResidencyCountry":"US"}`,
+    response: `{"success":true,"status":200,"data":{"verificationStatus":"PENDING","ocrConfidence":0.93,"fraudRiskScore":0.08,"riskLevel":"LOW","manualReviewRequired":true,"missingRequiredFields":[],"documentModelVersion":"<MODEL_VERSION>"}}`,
+  },
+  {
+    group: 'Tax OCR', method: 'POST', path: '/api/v1/tax/refund-cases/sync', title: '세무 환급 케이스 동기화', titleEn: 'Sync tax refund case',
+    description: '현지 증권사에서 신청한 세무 환급 케이스와 검증 완료 문서 스냅샷을 OmniLens 백오피스로 동기화합니다.', descriptionEn: 'Synchronizes a partner tax-refund case and verified-document snapshots to the OmniLens back office.',
+    fields: [
+      { name: 'caseId', location: 'body', type: 'string', required: true, description: '파트너 케이스 ID', descriptionEn: 'Partner case ID' },
+      { name: 'accountId', location: 'body', type: 'string', required: true, description: '파트너 계좌 ID', descriptionEn: 'Partner account ID' },
+      { name: 'taxYear', location: 'body', type: 'integer', required: true, description: '과세 연도', descriptionEn: 'Tax year' },
+      { name: 'treatyCountry', location: 'body', type: 'ISO 3166-1 alpha-2', required: true, description: '조세조약 국가', descriptionEn: 'Treaty country' },
+      { name: 'verifiedDocuments', location: 'body', type: 'object[]', required: true, description: '검증 완료 문서 스냅샷', descriptionEn: 'Verified-document snapshots' },
+      { name: 'requestedAt', location: 'body', type: 'ISO-8601 instant', required: true, description: '신청 시각', descriptionEn: 'Request timestamp' },
+    ],
+    requestBody: `{"caseId":"TAX-...","accountId":"ACC-...","userId":"USER-...","taxYear":2025,"treatyCountry":"US","estimatedRefundUsd":"120.50","advancePaymentRequested":false,"advancePaymentEligible":false,"matchedTradeIds":[],"verifiedDocuments":[],"requestedAt":"2026-07-12T00:00:00Z"}`,
+    response: `{"success":true,"status":200,"data":{"caseId":"TAX-...","status":"SYNCED","syncedAt":"2026-07-12T00:00:01Z","source":"STOCK_EXCHANGE"}}`,
+  },
+  {
+    group: 'WebSocket', method: 'WS', path: '/ws/market/quotes', title: '실시간 종목 체결 시세', titleEn: 'Realtime stock quote stream',
+    description: 'KIS 실시간 체결 틱을 MarketQuote JSON으로 전달합니다. 연결 후 replay 또는 종목 구독 프레임을 전송할 수 있습니다.', descriptionEn: 'Streams KIS trade ticks as MarketQuote JSON and accepts replay or stock-subscription frames.',
+    fields: [
+      { name: 'type', location: 'body', type: 'QUOTE_STREAM_REPLAY | QUOTE_STREAM_SUBSCRIBE', required: true, description: '클라이언트 프레임 유형', descriptionEn: 'Client frame type' },
+      { name: 'currency', location: 'body', type: 'ISO 4217', description: 'replay 환산 통화, 기본값 USD', descriptionEn: 'Replay currency; defaults to USD' },
+      { name: 'stockCodes', location: 'body', type: 'string[]', description: 'SUBSCRIBE 대상 6자리 종목 코드', descriptionEn: 'Six-digit stock codes for SUBSCRIBE' },
+    ],
+    requestBody: `{"type":"QUOTE_STREAM_SUBSCRIBE","currency":"USD","stockCodes":["005930","000660"]}`,
+    response: `{"stockCode":"005930","currentPriceKrw":75000,"changeRate":0.8,"localCurrency":"USD","marketDataTime":"2026-07-12T00:00:00Z","source":"KIS_REALTIME"}`,
+    protocol: 'RAW_JSON',
+  },
+  {
+    group: 'WebSocket', method: 'WS', path: '/ws/market/indices', title: '실시간 시장 지수', titleEn: 'Realtime market index stream',
+    description: 'KOSPI·KOSDAQ·KOSPI 200 지수 틱을 JSON으로 전달하며 현재 스냅샷 replay를 지원합니다.', descriptionEn: 'Streams KOSPI, KOSDAQ, and KOSPI 200 ticks and supports current-snapshot replay.',
+    fields: [{ name: 'type', location: 'body', type: 'INDEX_STREAM_REPLAY', required: true, description: '현재 지수 replay 요청', descriptionEn: 'Current index replay request' }],
+    requestBody: `{"type":"INDEX_STREAM_REPLAY"}`,
+    response: `{"indexCode":"0001","indexName":"KOSPI","currentValue":3200.15,"changeRate":0.83,"marketDataTime":"2026-07-12T00:00:00Z","source":"KIS_REALTIME"}`,
+    protocol: 'RAW_JSON',
+  },
+  {
+    group: 'WebSocket', method: 'WS', path: '/ws/alerts', title: '파트너 뉴스·공시 STOMP 구독', titleEn: 'Partner alert STOMP stream',
+    description: '인증된 파트너 전용 STOMP topic으로 보유·관심종목 뉴스·공시를 구독합니다.', descriptionEn: 'Subscribes to portfolio and watchlist alerts through partner-scoped STOMP topics.',
+    fields: [
+      { name: 'destination', location: 'body', type: '/topic/partners/{partnerId}/alerts', required: true, description: '파트너 전체 이벤트 topic', descriptionEn: 'Partner-wide event topic' },
+      { name: 'destination', location: 'body', type: '/topic/partners/{partnerId}/stocks/{stockCode}/alerts', description: '파트너 종목별 이벤트 topic', descriptionEn: 'Partner stock-specific event topic' },
+    ],
+    requestBody: `CONNECT\naccept-version:1.2\nhost:api.hana-omnilens.example.com\n\n\u0000\nSUBSCRIBE\nid:alerts-0\ndestination:/topic/partners/demo-partner/alerts\nack:auto\n\n\u0000`,
+    response: `{"eventId":"ALERT-...","sourceType":"NEWS","stockCode":"005930","sentiment":"POSITIVE","importance":"HIGH","watchlistTarget":true,"holderTarget":false,"publishedAt":"2026-07-12T00:00:00Z"}`,
+    protocol: 'STOMP',
   },
   {
     group: 'WebSocket', method: 'WS', path: '/ws/alerts/events', title: '실시간 뉴스·공시 이벤트', titleEn: 'Real-time news and disclosure events',
     description: '분석·저장된 뉴스·공시 이벤트를 raw WebSocket JSON 프레임으로 전달합니다.', descriptionEn: 'Streams analyzed and stored news and disclosure events as raw WebSocket JSON frames.', fields: [],
-    response: `{"eventType":"NEWS","stockCode":"005930","materiality":"HIGH","occurredAt":"2026-07-12T00:00:00Z"}`,
+    response: `{"eventId":"ALERT-...","sourceType":"DISCLOSURE","stockCode":"005930","sentiment":"NEUTRAL","importance":"HIGH","watchlistTarget":true,"holderTarget":true,"publishedAt":"2026-07-12T00:00:00Z"}`,
+    protocol: 'RAW_JSON',
   },
 ]
 
@@ -233,11 +425,33 @@ function ModelPerformance({ locale }: { locale: Locale }) {
 }
 
 function endpointUrl(endpoint: Endpoint): string {
-  const samplePath = endpoint.path.replace('{stockCode}', '005930')
+  const samplePath = endpoint.path
+    .replace('{stockCode}', '005930')
+    .replace('{indexCode}', '0001')
+    .replace('{partnerId}', 'demo-partner')
+    .replace('{newsId}', 'NEWS-EXAMPLE')
+    .replace('{alertId}', 'ALERT-EXAMPLE')
+    .replace('{currency}', 'USD')
   if (endpoint.path.endsWith('/quotes')) return `${apiBaseUrl}${samplePath}?stockCodes=005930&currency=USD&limit=20`
-  if (endpoint.path.endsWith('/market/news')) return `${apiBaseUrl}${samplePath}?limit=20`
-  if (endpoint.path.includes('/events') && endpoint.method === 'GET') return `${apiBaseUrl}${samplePath}?limit=20`
+  if (endpoint.path.endsWith('/stocks/search')) return `${apiBaseUrl}${samplePath}?query=삼성`
+  if (endpoint.path.endsWith('/quote') || endpoint.path.endsWith('/detail')) return `${apiBaseUrl}${samplePath}?currency=USD`
+  if (endpoint.path.endsWith('/orderability')) return `${apiBaseUrl}${samplePath}?side=BUY&quantity=10`
+  if (endpoint.path.endsWith('/history')) return `${apiBaseUrl}${samplePath}?limit=365`
+  if (endpoint.path.endsWith('/intraday')) return `${apiBaseUrl}${samplePath}?limit=390`
+  if (endpoint.path.endsWith('/realtime-subscription')) return `${apiBaseUrl}${samplePath}?session=REGULAR`
+  if (endpoint.path === '/api/v1/market/news') return `${apiBaseUrl}${samplePath}?limit=20`
+  if (endpoint.path.endsWith('/news/trending')) return `${apiBaseUrl}${samplePath}?windowHours=24&limit=10`
+  if (endpoint.path.endsWith('/stocks/{stockCode}/events')) return `${apiBaseUrl}${samplePath}?limit=20`
   return `${apiBaseUrl}${samplePath}`
+}
+
+function transportOf(endpoint: Endpoint): 'REST' | 'WS' {
+  return endpoint.method === 'WS' ? 'WS' : 'REST'
+}
+
+function methodLabel(endpoint: Endpoint): string {
+  if (endpoint.method !== 'WS') return endpoint.method
+  return endpoint.protocol === 'STOMP' ? 'STOMP' : 'JSON'
 }
 
 function curlExample(endpoint: Endpoint): string {
@@ -245,6 +459,7 @@ function curlExample(endpoint: Endpoint): string {
   if (endpoint.method === 'WS') {
     const wsUrl = url.replace(/^http/, 'ws')
     return [
+      '# 인증된 WebSocket Upgrade 확인; 프레임 송수신은 Java 예시를 사용합니다.',
       'curl --http1.1 --include --no-buffer \\',
       `  --url '${wsUrl}' \\`,
       "  --header 'Connection: Upgrade' \\",
@@ -267,6 +482,14 @@ function curlExample(endpoint: Endpoint): string {
 function javaExample(endpoint: Endpoint): string {
   const url = endpointUrl(endpoint)
   if (endpoint.method === 'WS') {
+    const sendFrame = endpoint.protocol === 'STOMP'
+      ? `var connectFrame = "CONNECT\\naccept-version:1.2\\nhost:api.hana-omnilens.example.com\\n\\n\\0";
+socket.sendText(connectFrame, true).join();
+var subscribeFrame = "SUBSCRIBE\\nid:alerts-0\\ndestination:/topic/partners/demo-partner/alerts\\nack:auto\\n\\n\\0";
+socket.sendText(subscribeFrame, true).join();`
+      : endpoint.requestBody ? `socket.sendText("""
+        ${endpoint.requestBody}
+        """, true).join();` : ''
     return `import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
@@ -282,7 +505,9 @@ var socket = client.newWebSocketBuilder()
             return WebSocket.Listener.super.onText(webSocket, data, last);
         }
     })
-    .join();`
+    .join();
+
+${sendFrame}`
   }
   const body = endpoint.requestBody ? `HttpRequest.BodyPublishers.ofString("""
         ${endpoint.requestBody}
@@ -315,7 +540,7 @@ function DocsPage({ locale, onLocale, onHome }: { locale: Locale; onLocale: (loc
   const groups = [...new Set(endpoints.map((endpoint) => endpoint.group))]
   const normalizedQuery = query.trim().toLocaleLowerCase(locale === 'ko' ? 'ko-KR' : 'en-US')
   const filtered = endpoints.filter((endpoint) => !normalizedQuery || [endpoint.path, endpoint.group, endpoint.title, endpoint.titleEn, endpoint.description, endpoint.descriptionEn].some((value) => value.toLocaleLowerCase().includes(normalizedQuery)))
-  return <div className="docs-shell"><header className="docs-header"><Wordmark onClick={onHome}/><div className="docs-header-actions"><button className="docs-home" onClick={onHome}>{locale === 'ko' ? '홈' : 'Home'}</button><span className="version">OpenAPI 3 · API v1</span><div className="language-switch"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div></div></header><div className="docs-layout"><aside className="docs-sidebar"><label className="docs-search"><span aria-hidden="true">⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === 'ko' ? 'API 검색' : 'Search APIs'} aria-label={locale === 'ko' ? 'API 검색' : 'Search APIs'}/></label>{groups.map((group) => { const items = filtered.filter((endpoint) => endpoint.group === group); return items.length > 0 && <div className="docs-group" key={group}><b>{group}</b>{items.map((endpoint) => <button className={selected.path === endpoint.path && selected.method === endpoint.method ? 'active' : ''} key={`${endpoint.method}-${endpoint.path}`} onClick={() => setSelected(endpoint)}><span className={endpoint.method.toLowerCase()}>{endpoint.method}</span>{locale === 'ko' ? endpoint.title : endpoint.titleEn}</button>)}</div> })}{filtered.length === 0 && <p className="docs-empty">{locale === 'ko' ? '검색 결과가 없습니다.' : 'No APIs found.'}</p>}</aside><main className="docs-content"><p className="breadcrumb">Hana OmniLens API / {selected.group}</p><h1>{locale === 'ko' ? selected.title : selected.titleEn}</h1><p className="docs-description">{locale === 'ko' ? selected.description : selected.descriptionEn}</p><div className="endpoint-bar"><span className={selected.method.toLowerCase()}>{selected.method}</span><code>{selected.path}</code></div><section className="docs-section"><h2>Authentication</h2><p>{locale === 'ko' ? '협력사 서버에서만 API 키를 보관하고 요청 헤더로 전달합니다. 브라우저·모바일 앱에 키를 내장하지 마십시오.' : 'Keep API keys on partner servers and send them only as request headers. Never embed keys in browsers or mobile apps.'}</p><div className="parameter"><code>X-HANA-OMNILENS-API-KEY</code><span>header · required</span></div></section><section className="docs-section"><h2>Request</h2>{selected.fields.length === 0 ? <p>{locale === 'ko' ? '추가 요청 파라미터가 없습니다.' : 'No additional request parameters.'}</p> : selected.fields.map((field) => <div className="parameter" key={`${field.location}-${field.name}`}><code>{field.name}</code><span>{field.location} · {field.type} · {field.required ? 'required' : 'optional'}</span><p>{locale === 'ko' ? field.description : field.descriptionEn}</p></div>)}</section></main><aside className="code-panel"><div className="code-tabs" role="tablist" aria-label="Code examples"><button className={codeTab === 'curl' ? 'active' : ''} onClick={() => setCodeTab('curl')} role="tab" aria-selected={codeTab === 'curl'}>cURL</button><button className={codeTab === 'java' ? 'active' : ''} onClick={() => setCodeTab('java')} role="tab" aria-selected={codeTab === 'java'}>Java 17+</button></div><pre tabIndex={0}><code>{codeTab === 'curl' ? curlExample(selected) : javaExample(selected)}</code></pre><h3>Response</h3><pre tabIndex={0}><code>{JSON.stringify(JSON.parse(selected.response), null, 2)}</code></pre></aside></div></div>
+  return <div className="docs-shell"><header className="docs-header"><Wordmark onClick={onHome}/><div className="docs-header-actions"><button className="docs-home" onClick={onHome}>{locale === 'ko' ? '홈' : 'Home'}</button><span className="version">Partner API · REST + WS</span><div className="language-switch"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div></div></header><div className="docs-layout"><aside className="docs-sidebar"><label className="docs-search"><span aria-hidden="true">⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={locale === 'ko' ? 'API 검색' : 'Search APIs'} aria-label={locale === 'ko' ? 'API 검색' : 'Search APIs'}/></label>{groups.map((group) => { const items = filtered.filter((endpoint) => endpoint.group === group); return items.length > 0 && <div className="docs-group" key={group}><b>{group}</b>{items.map((endpoint) => <button className={selected.path === endpoint.path && selected.method === endpoint.method ? 'active' : ''} key={`${endpoint.method}-${endpoint.path}`} onClick={() => setSelected(endpoint)}><span className={`transport-badge ${transportOf(endpoint).toLowerCase()}`}>{transportOf(endpoint)}</span><span className={`method-badge ${endpoint.method.toLowerCase()}`}>{methodLabel(endpoint)}</span><span className="endpoint-title">{locale === 'ko' ? endpoint.title : endpoint.titleEn}</span></button>)}</div> })}{filtered.length === 0 && <p className="docs-empty">{locale === 'ko' ? '검색 결과가 없습니다.' : 'No APIs found.'}</p>}</aside><main className="docs-content"><p className="breadcrumb">Hana OmniLens API / {selected.group}</p><div className="docs-scope">{locale === 'ko' ? '현지 증권사 서버 연동용 계약 · 운영자 수집·발행·재처리·재학습 및 포털 내부 API 제외' : 'Contract for partner brokerage servers · excludes operator collection, publishing, reprocessing, training, and portal-internal APIs'}</div><h1>{locale === 'ko' ? selected.title : selected.titleEn}</h1><p className="docs-description">{locale === 'ko' ? selected.description : selected.descriptionEn}</p><div className="endpoint-bar"><span className={`transport-badge ${transportOf(selected).toLowerCase()}`}>{transportOf(selected)}</span><span className={`method-badge ${selected.method.toLowerCase()}`}>{methodLabel(selected)}</span><code>{selected.path}</code></div><section className="docs-section"><h2>Authentication</h2><p>{locale === 'ko' ? 'API 키와 서명 비밀은 현지 증권사 서버에만 보관합니다. WebSocket도 HTTP Upgrade 요청에 같은 인증 헤더를 전송하며 브라우저·모바일 앱에는 키를 내장하지 않습니다.' : 'Keep API keys and signing secrets only on partner servers. WebSocket HTTP Upgrade requests use the same authentication headers; never embed keys in browsers or mobile apps.'}</p><div className="parameter"><code>mTLS client certificate</code><span>transport · production policy when enabled</span></div><div className="parameter"><code>X-HANA-OMNILENS-API-KEY</code><span>header · required</span></div><div className="parameter"><code>X-HANA-OMNILENS-TIMESTAMP</code><span>header · required when HMAC signing is enabled</span></div><div className="parameter"><code>X-HANA-OMNILENS-NONCE</code><span>header · required when HMAC signing is enabled</span></div><div className="parameter"><code>X-HANA-OMNILENS-SIGNATURE</code><span>header · required when HMAC signing is enabled</span><p>{locale === 'ko' ? '메서드, query 포함 URI, UTC timestamp, nonce, SHA-256 body hash의 canonical 문자열을 HMAC-SHA256으로 서명합니다.' : 'HMAC-SHA256 signs the canonical method, URI including query, UTC timestamp, nonce, and SHA-256 body hash.'}</p></div></section><section className="docs-section"><h2>Request</h2>{selected.fields.length === 0 ? <p>{locale === 'ko' ? '추가 요청 파라미터가 없습니다.' : 'No additional request parameters.'}</p> : selected.fields.map((field, index) => <div className="parameter" key={`${field.location}-${field.name}-${index}`}><code>{field.name}</code><span>{field.location} · {field.type} · {field.required ? 'required' : 'optional'}</span><p>{locale === 'ko' ? field.description : field.descriptionEn}</p></div>)}</section></main><aside className="code-panel"><div className="code-tabs" role="tablist" aria-label="Code examples"><button className={codeTab === 'curl' ? 'active' : ''} onClick={() => setCodeTab('curl')} role="tab" aria-selected={codeTab === 'curl'}>cURL</button><button className={codeTab === 'java' ? 'active' : ''} onClick={() => setCodeTab('java')} role="tab" aria-selected={codeTab === 'java'}>Java 17+</button></div><pre tabIndex={0}><code>{codeTab === 'curl' ? curlExample(selected) : javaExample(selected)}</code></pre><h3>{selected.method === 'WS' ? 'Message' : 'Response'}</h3><pre tabIndex={0}><code>{JSON.stringify(JSON.parse(selected.response), null, 2)}</code></pre></aside></div></div>
 }
 
 function AuthPage({ locale, onLocale, onAuthenticated, onHome }: { locale: Locale; onLocale: (locale: Locale) => void; onAuthenticated: (session: Session) => void; onHome: () => void }) {
