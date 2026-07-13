@@ -67,7 +67,8 @@ pre, code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospac
 .language-switch { display: flex; padding: 3px; background: #edf3f1; border-radius: 20px; }
 .language-switch button { border: 0; background: none; padding: 6px 9px; border-radius: 16px; color: #7a8985; font-size: 11px; font-weight: 800; }
 .language-switch .active { background: #fff; color: var(--hana); box-shadow: 0 2px 8px rgba(10, 70, 61, .12); }
-.login-button { border: 1px solid #c7d8d3; background: #fff; padding: 9px 16px; border-radius: 7px; color: var(--hana-dark); font-size: 13px; font-weight: 700; }
+.login-button, .logout-button { border: 1px solid #c7d8d3; background: #fff; padding: 9px 16px; border-radius: 7px; color: var(--hana-dark); font-size: 13px; font-weight: 700; }
+.logout-button:hover { border-color: var(--hana); color: var(--hana); }
 .user-name { padding: 9px 4px; color: #40534e; font-size: 13px; font-weight: 700; }
 .menu-toggle { display: none; border: 0; background: transparent; padding: 8px; }
 .menu-toggle span { display: block; width: 22px; height: 2px; margin: 4px 0; background: var(--ink); }
@@ -438,6 +439,8 @@ footer > span { text-align: right; line-height: 1.5; }
 
 @media (max-width: 600px) {
   .topbar { padding: 0 16px; }
+  .admin-link, .user-name { display: none; }
+  .logout-button { padding: 8px 11px; }
   .header-actions .language-switch { display: none; }
   .hero { padding: 56px 20px 44px; }
   .hero h1 { font-size: 39px; letter-spacing: -2.6px; }
