@@ -11,6 +11,14 @@ Hana OmniLens API의 대외 소개·개발자 문서와 파트너 회원·관리
 - Hana Montana AI가 검증한 세무 서류의 OCR 값을 경정청구서 편집기에 자동 적용
 - 자동 적용된 값을 수동 편집한 뒤 PDF 생성·다운로드 또는 국세청 제출·회원 환급 승인 처리
 - 한국 주식 시장, 뉴스·공시, 금융 고유어, 세무 OCR REST/WebSocket 계약 문서
+- 모델 소개 화면에 KF-DeBERTa LoRA 감성 앙상블, 파일 기반 K-FNSPID 가격반응 중요도 보조 모델, 공개 Test·운영 Gold·시간 외삽 Test 지표를 구분해 표시
+
+## 뉴스·공시 AI 표시 기준
+
+- 이벤트·종목 분류는 TF-IDF + One-vs-Rest Logistic Regression이다.
+- 감성은 KF-DeBERTa LoRA 80% + 기존 모델 20% 확률 앙상블이며 공개 금융 Test macro F1 `0.8840`, 실제 뉴스 Gold accuracy `0.9000`을 각각 표시한다.
+- 중요도는 의미 기반 분류 뒤에 K-FNSPID 가격반응을 보조 결합한다. 실제 뉴스 Gold accuracy는 `0.9625`, K-FNSPID 시간 Test quadratic kappa는 `0.4186`이다.
+- 시장영향은 중요도 근거를 보강하는 신호이며 단독 투자 신호나 운영 중요도 정확도 개선으로 표현하지 않는다.
 
 ## 실행 환경
 
