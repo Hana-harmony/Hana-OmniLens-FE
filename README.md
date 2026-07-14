@@ -11,14 +11,16 @@ Hana OmniLens API의 대외 소개·개발자 문서와 파트너 회원·관리
 - Hana Montana AI가 검증한 세무 서류의 OCR 값을 경정청구서 편집기에 자동 적용
 - 자동 적용된 값을 수동 편집한 뒤 PDF 생성·다운로드 또는 국세청 제출·회원 환급 승인 처리
 - 한국 주식 시장, 뉴스·공시, 금융 고유어, 세무 OCR REST/WebSocket 계약 문서
-- 모델 소개 화면에 KF-DeBERTa LoRA 감성 앙상블, 파일 기반 K-FNSPID 가격반응 중요도 보조 모델, 공개 Test·운영 Gold·시간 외삽 Test 지표를 구분해 표시
+- 모델 소개 화면에 Hana Montana AI(KF-DeBERTa + K-FNSPID), 파일 기반 K-FNSPID v3 가격반응 중요도 보조 모델, 공개 Test·운영 Gold·시간 외삽 Test 지표를 구분해 표시
 
 ## 뉴스·공시 AI 표시 기준
 
 - 이벤트·종목 분류는 TF-IDF + One-vs-Rest Logistic Regression이다.
 - 감성은 KF-DeBERTa LoRA 80% + 기존 모델 20% 확률 앙상블이며 공개 금융 Test macro F1 `0.8840`, 실제 뉴스 Gold accuracy `0.9000`을 각각 표시한다.
-- 중요도는 의미 기반 분류 뒤에 K-FNSPID 가격반응을 보조 결합한다. 실제 뉴스 Gold accuracy는 `0.9625`, K-FNSPID 시간 Test quadratic kappa는 `0.4186`이다.
-- 시장영향은 중요도 근거를 보강하는 신호이며 단독 투자 신호나 운영 중요도 정확도 개선으로 표현하지 않는다.
+- 공시 의미 중요도와 시장영향을 분리한다. 의미 모델은 Gold를 보지 않고 Validation으로 제목+요약 뷰를 선택해 모델 단독 기본 공시 Gold 600건에서 accuracy 98.50% / macro F1 0.9470, 존속위험 정책 포함 910건에서 accuracy 99.89% / macro F1 0.9962를 기록했다. K-FNSPID v3는 550,662문서·10,691,998행 일별 시세·공시 실제 원문 8,972건과 Validation 전용 class-prior 보정을 사용한다.
+- 시장영향은 seed 17/42/73 중 Validation으로 선택한 seed 73을 표시한다. 2026-04-01 이후 Test 10,750건에서 accuracy 0.5095 / macro F1 0.3820 / QWK 0.4694이며 TF-IDF 기준선 QWK 0.3141을 넘는다. 공시 하위집합 회귀는 AI 모델 문서의 한계로 공개한다.
+- REST·STOMP·raw WebSocket은 `importance`와 `marketImpactImportance/Score/Confidence`, 복합 `modelVersion`을 함께 보존하며 화면과 파트너 문서에서 서로 다른 신호로 표시한다.
+- 시장영향은 의미 중요도를 덮어쓰지 않고 등급·점수·confidence를 별도 제공한다. 단독 투자 신호나 인과적 중요도로 표현하지 않는다.
 
 ## 실행 환경
 
