@@ -2,7 +2,8 @@ import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 
-const apiBaseUrl = import.meta.env.VITE_OMNILENS_API_BASE_URL ?? 'http://127.0.0.1:8080'
+const apiBaseUrl = import.meta.env.VITE_OMNILENS_API_BASE_URL
+if (!apiBaseUrl) throw new Error('VITE_OMNILENS_API_BASE_URL is required')
 type Locale = 'ko' | 'en'
 type Route = 'home' | 'docs' | 'auth' | 'portal' | 'admin' | 'password'
 type User = { userId: string; username: string; name: string; phoneNumber: string; role: 'MEMBER' | 'ADMIN' }
