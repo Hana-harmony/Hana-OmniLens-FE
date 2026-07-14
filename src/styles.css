@@ -332,16 +332,21 @@ footer > span { text-align: right; line-height: 1.5; }
 .editor-actions button { padding: 10px 15px; border: 1px solid #b9ccc6; border-radius: 7px; background: #fff; color: var(--hana-dark); }
 .editor-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-top: 28px; }
 .editor-heading h3 { margin: 0; }
+.editor-heading span { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; }
 .document-previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
 .document-previews article { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #f8fbfa; }
 .document-previews b, .document-previews span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .document-previews span { margin: 5px 0 10px; color: var(--muted); font-size: 10px; }
 .document-previews img, .document-previews iframe, .document-loading { width: 100%; height: 260px; border: 0; border-radius: 6px; object-fit: contain; background: #fff; }
 .document-loading { display: grid; place-items: center; color: var(--muted); font-size: 11px; }
-.correction-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: #fbfdfc; }
-.correction-form label { display: grid; gap: 7px; color: #51615c; font-size: 11px; font-weight: 700; }
-.correction-form input, .correction-form textarea { width: 100%; padding: 10px 11px; border: 1px solid #cbd9d5; border-radius: 6px; background: #fff; outline: none; resize: vertical; }
-.correction-form label:has(textarea) { grid-column: 1 / -1; }
+.document-loading.failed { padding: 12px; color: #a94838; text-align: center; }
+.pdf-editor { display: grid; gap: 24px; padding: 24px; overflow-x: auto; border: 1px solid #d9e2df; border-radius: 12px; background: #e9edeb; }
+.pdf-editor-page { position: relative; width: min(900px, 100%); margin: 0 auto; flex: none; overflow: hidden; background: #fff; box-shadow: 0 9px 30px rgba(24, 51, 44, .16); }
+.pdf-editor-page > img { display: block; width: 100%; height: 100%; user-select: none; pointer-events: none; }
+.pdf-editor-page input, .pdf-editor-page textarea { position: absolute; box-sizing: border-box; min-width: 0; margin: 0; padding: 1px 3px; border: 1px dashed rgba(0, 133, 125, .6); border-radius: 2px; outline: none; resize: none; overflow: hidden; background: rgba(231, 248, 244, .58); color: #102e28; font: 500 clamp(7px, 1.15vw, 12px)/1.15 'Pretendard', sans-serif; }
+.pdf-editor-page input:hover, .pdf-editor-page textarea:hover { background: rgba(222, 248, 241, .82); }
+.pdf-editor-page input:focus, .pdf-editor-page textarea:focus { z-index: 2; border: 2px solid var(--hana); background: rgba(255, 255, 255, .96); box-shadow: 0 0 0 3px rgba(0, 133, 125, .15); }
+.pdf-editor-loading { display: grid; min-height: 360px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #f4f7f6; color: var(--muted); font-size: 12px; }
 .period-tabs { display: flex; gap: 5px; padding: 4px; border-radius: 8px; background: #edf3f1; }
 .period-tabs button { padding: 7px 12px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); }
 .period-tabs .active { background: #fff; color: var(--hana); font-weight: 700; box-shadow: 0 2px 8px rgba(10, 70, 61, .1); }
@@ -497,8 +502,7 @@ footer > span { text-align: right; line-height: 1.5; }
   .member-summary { grid-template-columns: 1fr; }
   .page-heading, .panel-title { display: block; }
   .data-table, .admin-panel { padding: 18px; }
-  .correction-form { grid-template-columns: 1fr; padding: 16px; }
-  .correction-form label:has(textarea) { grid-column: auto; }
+  .pdf-editor { margin: 0 -18px; padding: 12px; border-right: 0; border-left: 0; border-radius: 0; }
   .phone-input { grid-template-columns: 1fr; }
   .access-gate h1 { font-size: 26px; }
 }
