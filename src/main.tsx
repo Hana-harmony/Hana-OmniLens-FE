@@ -37,7 +37,7 @@ const copy = {
     start: 'API 키 신청', explore: '개발자 문서 보기', trust: '실제 거래소 서비스에서 검증된 API',
     capabilities: '파트너 서비스에 필요한 핵심 기능', capabilityIntro: '하나금융의 데이터와 Hana Montana AI를 하나의 API 계약으로 연결합니다.',
     cases: '구현된 서비스로 확인하세요', casesIntro: 'Hana OmniLens API와 연동된 현지 거래소의 실제 화면에서 세 가지 핵심 기능을 확인하세요.',
-    ai: 'Hana Montana', aiTitle: 'OmniLens의 금융 AI 모델', aiBody: 'KF-DeBERTa 금융 감성, K-FNSPID 가격반응 중요도, 문맥 번역, 고유어 설명, 세무 문서 OCR을 결합한 전용 AI 모델입니다. 공개 평가와 운영 Gold를 분리해 검증하고 품질 gate 실패 시 안전한 기준 모델로 전환합니다.',
+    ai: 'Hana Montana AI', aiTitle: 'Hana Montana AI(KF-DeBERTa + K-FNSPID)', aiBody: 'KF-DeBERTa 금융 감성·공시 의미 중요도와 K-FNSPID v3 시장영향을 분리해 제공하는 전용 금융 AI입니다. 공개 평가와 운영 Gold를 분리해 검증하고 품질 gate 실패 시 안전한 기준 모델로 전환합니다.',
   },
   en: {
     nav: ['Capabilities', 'Use cases', 'AI model'], docs: 'API Docs', login: 'Sign in', heroTag: 'GLOBAL KOREA MARKET INTELLIGENCE',
@@ -46,7 +46,7 @@ const copy = {
     start: 'Request an API key', explore: 'Explore API docs', trust: 'Proven in a production-grade exchange experience',
     capabilities: 'Core intelligence for partner products', capabilityIntro: 'Hana Financial data and Hana Montana AI, delivered through one stable API contract.',
     cases: 'See it working in a real product', casesIntro: 'Explore three core capabilities through live screens from the local exchange integrated with Hana OmniLens API.',
-    ai: 'Hana Montana', aiTitle: 'The financial AI behind OmniLens', aiBody: 'A dedicated financial AI combining KF-DeBERTa sentiment, K-FNSPID price-response materiality, contextual translation, terminology, and tax-document OCR. Public benchmarks and operational Gold sets are validated separately, with a safe baseline fallback when quality gates fail.',
+    ai: 'Hana Montana AI', aiTitle: 'Hana Montana AI(KF-DeBERTa + K-FNSPID)', aiBody: 'A dedicated financial AI that separates KF-DeBERTa sentiment and semantic disclosure materiality from K-FNSPID v3 market impact. Public benchmarks and operational Gold sets are validated separately, with a safe baseline fallback when quality gates fail.',
   },
 } as const
 
@@ -305,13 +305,20 @@ const endpoints: Endpoint[] = [
       { name: 'destination', location: 'body', type: '/topic/partners/{partnerId}/stocks/{stockCode}/alerts', description: '파트너 종목별 이벤트 topic', descriptionEn: 'Partner stock-specific event topic' },
     ],
     requestBody: `CONNECT\naccept-version:1.2\nhost:api.hana-omnilens.example.com\n\n\u0000\nSUBSCRIBE\nid:alerts-0\ndestination:/topic/partners/demo-partner/alerts\nack:auto\n\n\u0000`,
-    response: `{"eventId":"ALERT-...","sourceType":"NEWS","stockCode":"005930","sentiment":"POSITIVE","importance":"HIGH","watchlistTarget":true,"holderTarget":false,"publishedAt":"2026-07-12T00:00:00Z"}`,
+    response: `{"eventId":"ALERT-...","sourceType":"NEWS","stockCode":"005930","sentiment":"POSITIVE","importance":"HIGH","marketImpactImportance":"MEDIUM","marketImpactScore":0.42,"marketImpactConfidence":0.81,"modelVersion":"financial-ml-...|impact:k-fnspid-impact-kf-deberta-lora-...","watchlistTarget":true,"holderTarget":false,"publishedAt":"2026-07-12T00:00:00Z"}`,
     protocol: 'STOMP',
   },
   {
     group: 'WebSocket', method: 'WS', path: '/ws/alerts/events', title: '실시간 뉴스·공시 이벤트', titleEn: 'Real-time news and disclosure events',
-    description: '분석·저장된 뉴스·공시 이벤트를 raw WebSocket JSON 프레임으로 전달합니다.', descriptionEn: 'Streams analyzed and stored news and disclosure events as raw WebSocket JSON frames.', fields: [],
-    response: `{"eventId":"ALERT-...","sourceType":"DISCLOSURE","stockCode":"005930","sentiment":"NEUTRAL","importance":"HIGH","watchlistTarget":true,"holderTarget":true,"publishedAt":"2026-07-12T00:00:00Z"}`,
+    description: '의미 중요도와 K-FNSPID 가격반응을 분리한 분석·저장 이벤트를 raw WebSocket JSON으로 전달합니다.', descriptionEn: 'Streams analyzed and stored events with separate semantic materiality and K-FNSPID market-impact signals.',
+    fields: [
+      { name: 'importance', location: 'body', type: 'LOW | MEDIUM | HIGH | CRITICAL', required: true, description: '공시·뉴스의 의미 중요도', descriptionEn: 'Semantic materiality of the item' },
+      { name: 'marketImpactImportance', location: 'body', type: 'LOW | MEDIUM | HIGH | CRITICAL', description: '독립 가격반응 등급', descriptionEn: 'Separate predicted market-impact class' },
+      { name: 'marketImpactScore', location: 'body', type: 'number (0..1)', description: 'K-FNSPID 순서형 가격반응 점수', descriptionEn: 'K-FNSPID ordinal market-impact score' },
+      { name: 'marketImpactConfidence', location: 'body', type: 'number (0..1)', description: '가격반응 모델 confidence', descriptionEn: 'Market-impact model confidence' },
+      { name: 'modelVersion', location: 'body', type: 'string', description: '복합 AI 모델 출처', descriptionEn: 'Composite AI model provenance' },
+    ],
+    response: `{"eventId":"ALERT-...","sourceType":"DISCLOSURE","stockCode":"005930","sentiment":"NEUTRAL","importance":"HIGH","marketImpactImportance":"MEDIUM","marketImpactScore":0.42,"marketImpactConfidence":0.81,"modelVersion":"financial-ml-...|impact:k-fnspid-impact-kf-deberta-lora-...","watchlistTarget":true,"holderTarget":true,"publishedAt":"2026-07-12T00:00:00Z"}`,
     protocol: 'RAW_JSON',
   },
 ]
@@ -405,11 +412,11 @@ function ProductStory({ locale, title, intro }: { locale: Locale; title: string;
   const [active, setActive] = useState(0)
   useEffect(() => { const elements = [...document.querySelectorAll<HTMLElement>('[data-story-step]')]; const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.storyStep)) }), { rootMargin: '-38% 0px -38% 0px' }); elements.forEach((element) => observer.observe(element)); return () => observer.disconnect() }, [])
   const stories = locale === 'ko' ? [
-    { tag: '핵심 기능 01', title: '한국 증시 인텔리전스', body: '신규 뉴스·공시가 발생하면 수집·분석 파이프라인을 거쳐 현지 증권사에 REST와 WebSocket으로 전달합니다.', detail: '보유·관심종목 이벤트를 실시간으로 연결해 해외 MTS 피드와 알림에 활용합니다.', points: ['KF-DeBERTa 감성과 K-FNSPID 가격반응 기반 중요도 보조 분류', '로컬 LLM 기반 번역과 What·Why·Impact 요약', 'RAG 기반 한국 증시 고유어 원클릭 해설', '섹터·산업·기업 매칭과 글로벌 피어 기업 매칭'], image: '/showcase/exchange-market.png', focus: 'focus-news' },
+    { tag: '핵심 기능 01', title: '한국 증시 인텔리전스', body: '신규 뉴스·공시가 발생하면 수집·분석 파이프라인을 거쳐 현지 증권사에 REST와 WebSocket으로 전달합니다.', detail: '보유·관심종목 이벤트를 실시간으로 연결해 해외 MTS 피드와 알림에 활용합니다.', points: ['KF-DeBERTa 감성·공시 의미 중요도와 K-FNSPID 가격반응의 독립 분류', '로컬 LLM 기반 번역과 What·Why·Impact 요약', 'RAG 기반 한국 증시 고유어 원클릭 해설', '섹터·산업·기업 매칭과 글로벌 피어 기업 매칭'], image: '/showcase/exchange-market.png', focus: 'focus-news' },
     { tag: '핵심 기능 02', title: '실시간 종목 스크리너', body: '시계열 ML 예측 모델이 외국인 보유 제한 32개 종목의 장중 외국인 지분율 예상치를 제공합니다.', detail: '실시간 환율 적용 시세를 WebSocket으로 제공하고 호가 틱·VI·가격 제한·거래정지·외국인 한도를 주문 전 필터링 신호로 반환합니다.', points: ['KIS·KRX 기반 현재가, 지수, 호가, 일봉·분봉 조회', '요청 통화 환산 시세와 실시간 quote replay', '제한 신호와 출처·계산 버전을 포함한 주문 가능 여부'], image: '/showcase/exchange-quotes.png', focus: 'focus-quotes' },
     { tag: '핵심 기능 03', title: '글로벌 세무 처리 자동화', body: '배당소득 제한세율 적용에 필요한 거주자 증명서, 아포스티유, 제한세율 적용신청서를 OCR 기반으로 검증합니다.', detail: '문서 유형·필수 필드·국가·문서 간 일관성·위변조 위험을 확인하고 검토 상태와 근거를 반환합니다.', points: ['파일 형식·크기·magic byte·MIME 일치 검사', '문서별 OCR parser·reviewer와 누락 필드 탐지', 'VERIFIED·REVIEW_REQUIRED·REJECTED 상태와 model version 제공'], image: '/showcase/exchange-tax.png', focus: 'focus-tax' },
   ] : [
-    { tag: 'CORE 01', title: 'Korean market intelligence', body: 'New news and disclosures flow through collection and analysis, then reach partner brokerages over REST and WebSocket.', detail: 'Portfolio and watchlist events power live overseas MTS feeds and alerts.', points: ['KF-DeBERTa sentiment with K-FNSPID price-response materiality support', 'Local-LLM translation and What·Why·Impact summaries', 'RAG explanations for Korean market terminology', 'Sector, industry, company, and global-peer matching'], image: '/showcase/exchange-market.png', focus: 'focus-news' },
+    { tag: 'CORE 01', title: 'Korean market intelligence', body: 'New news and disclosures flow through collection and analysis, then reach partner brokerages over REST and WebSocket.', detail: 'Portfolio and watchlist events power live overseas MTS feeds and alerts.', points: ['Separate KF-DeBERTa sentiment and semantic materiality from K-FNSPID market impact', 'Local-LLM translation and What·Why·Impact summaries', 'RAG explanations for Korean market terminology', 'Sector, industry, company, and global-peer matching'], image: '/showcase/exchange-market.png', focus: 'focus-news' },
     { tag: 'CORE 02', title: 'Real-time stock screener', body: 'A time-series ML model estimates intraday foreign ownership for 32 foreign-limit stocks.', detail: 'WebSocket FX-adjusted quotes and order-book-tick restrictions support pre-trade screening.', points: ['KIS and KRX quotes, indices, order books, and charts', 'Currency-converted quote replay', 'Sourced VI, price-limit, suspension, and foreign-limit signals'], image: '/showcase/exchange-quotes.png', focus: 'focus-quotes' },
     { tag: 'CORE 03', title: 'Global tax automation', body: 'OCR validation covers residence certificates, apostilles, and reduced withholding applications.', detail: 'Format, required fields, cross-document consistency, and fraud risk are returned with review evidence.', points: ['File type, size, magic-byte, and MIME validation', 'Document-specific OCR parsers and reviewers', 'VERIFIED, REVIEW_REQUIRED, or REJECTED with model version'], image: '/showcase/exchange-tax.png', focus: 'focus-tax' },
   ]
@@ -435,7 +442,7 @@ function ModelPerformance({ locale }: { locale: Locale }) {
   })()
   const features = locale === 'ko' ? [
     { title: '뉴스·공시 이벤트·종목 분류', model: 'TF-IDF + One-vs-Rest Logistic Regression', description: '금융 n-gram과 출처 특성으로 이벤트 다중 라벨과 대상 종목을 분류합니다.', metrics: [{ label: '실제 뉴스 이벤트 macro F1', value: 92.21, display: '0.9221' }, { label: '실제 뉴스 종목 정확도', value: 100, display: '100.00%' }] },
-    { title: '금융 감성·가격반응 중요도', model: 'KF-DeBERTa LoRA Ensemble + K-FNSPID', description: '감성은 KF-DeBERTa 80%와 기존 모델 20%를 앙상블합니다. 중요도는 의미 기반 판정에 55만 문서·1,069만 일별 시세로 학습한 가격반응 신호를 보조 결합하며 단독 투자 신호로 사용하지 않습니다.', metrics: [{ label: '공개 감성 Test macro F1', value: 88.4, display: '0.8840' }, { label: '실제 뉴스 감성 정확도', value: 90, display: '90.00%' }, { label: '실제 뉴스 중요도 정확도', value: 96.25, display: '96.25%' }, { label: '시장영향 quadratic kappa', value: 41.86, display: '0.4186' }] },
+    { title: '금융 감성·공시 중요도·시장영향', model: 'Hana Montana AI(KF-DeBERTa + K-FNSPID)', description: '감성은 KF-DeBERTa 80%와 기존 모델 20%를 앙상블합니다. 공시 의미 중요도는 Gold를 보지 않고 Validation으로 제목+요약 뷰를 선택하며, 55만 문서·1,069만 일별 시세·공시 원문 8,972건의 K-FNSPID 시장영향은 3개 seed 중 Validation 선택 seed 73으로 별도 등급·점수를 제공합니다.', metrics: [{ label: '공개 감성 Test macro F1', value: 88.4, display: '0.8840' }, { label: '실제 뉴스 감성 정확도', value: 90, display: '90.00%' }, { label: '공시 중요도 운영 Gold 정확도', value: 99.89, display: '99.89%' }, { label: '시장영향 Test QWK', value: 46.94, display: '0.4694' }] },
     { title: '뉴스·공시 번역과 요약', model: 'Qwen3-4B GGUF Q4 + Grounded Rules', description: 'Qwen3 로컬 LLM이 원문 문단을 보존해 번역하고, 근거 기반 규칙이 What·Why·Impact 구조를 생성합니다.' },
     { title: '한국 증시 고유어 해설', model: 'INTERNAL_CONTEXT_RAG · k-finance-term-dictionary-v3', description: '검증 사전과 뉴스·공시 문맥을 결합해 영문 표기, 해설, 근거를 제공합니다.' },
     { title: '글로벌 피어 기업 매칭', model: 'Business Profile ML + TF-IDF/SVD Hybrid Ranker', description: '섹터·산업·사업 모델·재무 특성을 결합해 한국 종목과 비교할 글로벌 상장사를 추천합니다.' },
@@ -443,7 +450,7 @@ function ModelPerformance({ locale }: { locale: Locale }) {
     { title: '세무 문서 OCR 검증', model: 'Tesseract kor+eng OCR + Document-specific Reviewer', description: '문서별 OCR·parser·reviewer가 필수 필드, 국가·문서 간 일관성, 위변조 위험을 검증합니다.' },
   ] : [
     { title: 'News events and stock relevance', model: 'TF-IDF + One-vs-Rest Logistic Regression', description: 'Financial n-grams and source features classify multi-label events and related stocks.', metrics: [{ label: 'Real-news event macro F1', value: 92.21, display: '0.9221' }, { label: 'Real-news stock accuracy', value: 100, display: '100.00%' }] },
-    { title: 'Financial sentiment and price-response materiality', model: 'KF-DeBERTa LoRA Ensemble + K-FNSPID', description: 'Sentiment blends KF-DeBERTa at 80% with the baseline at 20%. Materiality conservatively augments semantic classification with a price-response signal trained on 550K documents and 10.69M daily-price rows; it is not a standalone trading signal.', metrics: [{ label: 'Public sentiment Test macro F1', value: 88.4, display: '0.8840' }, { label: 'Real-news sentiment accuracy', value: 90, display: '90.00%' }, { label: 'Real-news materiality accuracy', value: 96.25, display: '96.25%' }, { label: 'Market-impact quadratic kappa', value: 41.86, display: '0.4186' }] },
+    { title: 'Sentiment, disclosure materiality, and market impact', model: 'Hana Montana AI(KF-DeBERTa + K-FNSPID)', description: 'Sentiment blends KF-DeBERTa at 80% with the baseline at 20%. Semantic disclosure materiality selects its title-and-summary view on Validation without using Gold, while K-FNSPID market impact from 550K documents, 10.69M daily-price rows, and 8,972 full-text disclosures is served by seed 73 selected across three seeds on Validation.', metrics: [{ label: 'Public sentiment Test macro F1', value: 88.4, display: '0.8840' }, { label: 'Real-news sentiment accuracy', value: 90, display: '90.00%' }, { label: 'Operational materiality Gold accuracy', value: 99.89, display: '99.89%' }, { label: 'Market-impact Test QWK', value: 46.94, display: '0.4694' }] },
     { title: 'Translation and structured summaries', model: 'Qwen3-4B GGUF Q4 + Grounded Rules', description: 'Qwen3 preserves source paragraphs in translation, while grounded rules produce the What, Why, and Impact structure.' },
     { title: 'Korean market terminology', model: 'INTERNAL_CONTEXT_RAG · k-finance-term-dictionary-v3', description: 'A validated glossary and article context return English labels, explanations, and evidence.' },
     { title: 'Global peer matching', model: 'Business Profile ML + TF-IDF/SVD Hybrid Ranker', description: 'Sector, industry, business-model, and financial signals identify comparable global listed companies.' },
