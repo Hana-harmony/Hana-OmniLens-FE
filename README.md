@@ -8,8 +8,8 @@ Hana OmniLens API의 대외 소개·개발자 문서와 파트너 회원·관리
 - 회원별 파트너 API 키 신청·취소, 발급 결과 조회, 재발급·폐기 요청
 - `ADMIN` RBAC 기반 API 키 승인·반려·재발급·폐기
 - 관리자 대시보드, API 키 관리, 고유어 설명 분석, 제한세율 적용신청 처리 탭 네비게이션
-- Hana Montana AI가 검증한 세무 서류의 OCR 값을 경정청구서 편집기에 자동 적용
-- 자동 적용된 값을 수동 편집한 뒤 PDF 생성·다운로드 또는 국세청 제출·회원 환급 승인 처리
+- Hana Montana AI가 검증한 세무 서류의 OCR 값을 실제 경정청구서 PDF 좌표에 자동 적용
+- API가 렌더링한 공식 PDF 양식 위에서 값을 직접 편집한 뒤 PDF 생성·다운로드 또는 국세청 제출·회원 환급 승인 처리
 - 한국 주식 시장, 뉴스·공시, 금융 고유어, 세무 OCR REST/WebSocket 계약 문서
 - 모델 소개 화면에 Hana Montana AI(KF-DeBERTa + K-FNSPID), 파일 기반 K-FNSPID v3 가격반응 중요도 보조 모델, 공개 Test·운영 Gold·시간 외삽 Test 지표를 구분해 표시
 
@@ -53,7 +53,7 @@ VITE_OMNILENS_API_BASE_URL=https://api.example.com
 
 1. 거래소 BE가 신청 건과 Hana Montana AI 검증 완료 서류의 `extractedFields`를 OmniLens API에 동기화한다.
 2. 관리자가 신청 건에서 인증된 원본 서류 3개를 확인하고 `정보 자동 불러오기`를 누르면 이름, 생년월일, 전화번호, 거주지국, TIN, 주소, 귀속연도 등이 편집기에 입력된다.
-3. 관리자는 값을 수동 편집한다. 경정청구서 양식은 서버에 검증된 리소스로 고정되어 사용자가 업로드하지 않는다.
+3. API가 서버에 고정된 2쪽 공식 PDF를 PNG로 렌더링하고 동일한 출력 좌표·크기를 전달한다. 관리자는 별도 폼이 아니라 PDF 양식 위의 강조된 칸에서 값을 직접 수정한다.
 4. `PDF 다운로드`는 현재 값으로 PDF를 생성하고 API DB에 필드, PDF, SHA-256를 함께 저장한다.
 5. `국세청 제출 및 승인`은 현재 값으로 최종 PDF를 저장한 뒤 상태를 `REFUND_APPROVED`로 변경한다. 거래소 BE가 상태를 재동기화하면 회원에게 승인으로 표시된다.
 
@@ -66,6 +66,7 @@ VITE_OMNILENS_API_BASE_URL=https://api.example.com
 | API 키 신청·취소·재발급·폐기 요청 | `GET/POST /api/v1/portal/api-key-applications`, `POST .../{id}/cancel|reissue|revoke` |
 | 관리자 API 키 심사·직접 조치 | `POST /api/v1/portal/admin/api-key-applications/{id}/approve|reject|reissue|revoke` |
 | 고유어 클릭 시계열 | `GET /api/v1/portal/admin/term-analytics?period=DAY|MONTH|YEAR|ALL` |
+| PDF 편집 좌표·양식 페이지 | `GET /api/v1/portal/admin/tax/correction-request/template/layout`, `GET .../template/pages/{pageNumber}` |
 | 경정청구 초기값 | `GET /api/v1/portal/admin/tax/refund-cases/{caseId}/correction-fields` |
 | PDF 생성·저장 | `POST /api/v1/portal/admin/tax/refund-cases/{caseId}/correction-request.pdf` |
 | 환급 승인 | `POST /api/v1/portal/admin/tax/refund-cases/{caseId}/approve` |
