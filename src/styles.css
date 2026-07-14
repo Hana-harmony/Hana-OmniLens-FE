@@ -21,7 +21,7 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; overflow-x: hidden; }
+body { margin: 0; min-width: 0; overflow-x: hidden; }
 button, input { font: inherit; }
 select, textarea { font: inherit; }
 button { cursor: pointer; }
@@ -396,7 +396,7 @@ footer > span { text-align: right; line-height: 1.5; }
   .topbar nav.open { display: flex; }
   .topbar nav button { padding: 12px; text-align: left; }
   .header-actions { margin-left: auto; }
-  .login-button { display: none; }
+  .login-button { padding: 8px 12px; }
   .hero { min-height: auto; grid-template-columns: 1fr; padding: 70px 28px 55px; gap: 20px; }
   .hero-visual { height: 390px; }
   .hero-logo { width: min(500px, 90%); }
@@ -431,8 +431,8 @@ footer > span { text-align: right; line-height: 1.5; }
   .auth-brand { display: none; }
   .auth-panel { min-height: 100vh; padding: 28px; }
   .auth-panel form { margin-top: 70px; }
-  .console-shell { grid-template-columns: 1fr; }
-  .console-sidebar { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .console-shell { grid-template-columns: minmax(0, 1fr); }
+  .console-sidebar { position: relative; min-width: 0; max-width: 100vw; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .console-sidebar nav { flex-direction: row; padding-bottom: 4px; overflow-x: auto; }
   .console-sidebar nav button { flex: 0 0 auto; white-space: nowrap; }
   .sidebar-user { display: none; }
@@ -443,9 +443,13 @@ footer > span { text-align: right; line-height: 1.5; }
 }
 
 @media (max-width: 600px) {
-  .topbar { padding: 0 16px; }
+  .topbar { padding: 0 10px; gap: 6px; }
+  .wordmark { gap: 3px; }
+  .wordmark span, .wordmark b { font-size: 18px; }
+  .menu-toggle { padding: 5px; }
   .admin-link, .user-name { display: none; }
   .logout-button { padding: 8px 11px; }
+  .login-button { padding: 7px 9px; font-size: 11px; }
   .header-actions .language-switch { display: none; }
   .hero { padding: 56px 20px 44px; }
   .hero h1 { font-size: 39px; letter-spacing: -2.6px; }

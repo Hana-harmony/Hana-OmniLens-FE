@@ -38,6 +38,9 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
 
+      - name: Test routing contracts
+        run: npm test
+
       - name: Type-check and build
         run: npm run build
 
