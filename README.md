@@ -45,8 +45,8 @@ VITE_OMNILENS_API_BASE_URL=https://api.example.com
 - 접근 토큰은 브라우저 `sessionStorage`에만 저장하고 API에 `Authorization: Bearer ...`로 전송한다.
 - 홈 헤더의 로그아웃은 `sessionStorage` 토큰과 React 세션 상태를 함께 제거한 뒤 홈으로 이동한다.
 - 회원 API는 인증된 `MEMBER` 또는 `ADMIN`, 관리자 API는 `ADMIN`만 호출할 수 있다. 화면 제어와 무관하게 API가 Spring Security RBAC를 강제한다.
-- 초기 관리자는 Flyway가 DB에 아이디/비밀번호 `admin`/`admin`으로 생성한다. 초기 로그인 토큰은 비밀번호 변경 API만 호출할 수 있고, 비밀번호를 변경해야 관리자 기능을 이용할 수 있다.
-- 비밀번호는 8~128자를 받고, 회원가입 전화번호는 국가번호 선택과 자동 하이픈 서식을 지원한다. 비밀번호 변경 시 기존 토큰이 즉시 폐기된다.
+- 초기 관리자 비밀번호는 API 서버의 `OMNILENS_PORTAL_BOOTSTRAP_ADMIN_PASSWORD`로만 주입한다. 저장소에 기본 비밀번호를 두지 않으며 초기 로그인 뒤 비밀번호를 변경해야 관리자 기능을 이용할 수 있다.
+- 비밀번호는 API 계약과 동일하게 12~128자를 받고, 회원가입 전화번호는 국가번호 선택과 자동 하이픈 서식을 지원한다. 비밀번호 변경 시 기존 토큰이 즉시 폐기된다.
 - 파트너 API 키는 회원이 확인한 뒤 서버 시크릿 저장소에 이관해야 하며 브라우저·모바일 애에 포함하면 안 된다.
 
 ## 경정청구서 처리 흐름
@@ -75,9 +75,10 @@ VITE_OMNILENS_API_BASE_URL=https://api.example.com
 
 ```bash
 npm ci
+npm test
 npm run build
 ```
 
-`npm run build`는 TypeScript 프로젝트 검사와 Vite 운영 빌드를 모두 수행한다.
+`npm test`는 새로고침 가능한 콘솔 탭 URL 계약을 검증한다. `npm run build`는 TypeScript 프로젝트 검사와 Vite 운영 빌드를 모두 수행한다.
 
 GitHub Actions는 `feature`/`main` 대상 PR과 push에서 Node.js 24, `npm ci`, 운영 의존성 보안 감사, TypeScript/Vite 빌드를 필수 체크로 실행한다.
