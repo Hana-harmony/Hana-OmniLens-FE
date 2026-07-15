@@ -16,7 +16,7 @@ Hana OmniLens API의 대외 소개·개발자 문서와 파트너 회원·관리
 ## 뉴스·공시 AI 표시 기준
 
 - 이벤트·종목 분류는 TF-IDF + One-vs-Rest Logistic Regression이다.
-- 감성은 KF-DeBERTa LoRA 80% + 기존 모델 20% 확률 앙상블이며 공개 금융 Test macro F1 `0.8840`, 실제 뉴스 Gold accuracy `0.9000`을 각각 표시한다.
+- 감성은 정규화 중복·충돌 제거 공개 Test 932건에서 Validation Selection으로 잠근 KF-DeBERTa LoRA 후보를 표시한다. Macro F1은 `0.8849`로 KR-FinBERT-SC `0.7266`보다 높지만, 실제 뉴스 Gold accuracy `0.8625`가 운영 gate `0.90`에 미달해 신규 후보를 승격하지 않고 기존 모델로 fail closed한다. 공개 Test는 과거 반복 조회되어 독립 SOTA가 아닌 재현 비교로 명시한다.
 - 공시 의미 중요도와 시장영향을 분리한다. 의미 모델은 Gold를 보지 않고 Validation으로 제목+요약 뷰를 선택해 모델 단독 기본 공시 Gold 600건에서 accuracy 98.50% / macro F1 0.9470, 존속위험 정책 포함 910건에서 accuracy 99.89% / macro F1 0.9962를 기록했다.
 - K-FNSPID v4는 뉴스 524,696건과 공시 722,989건, 총 1,247,685문서와 10,691,998행 파일 기반 일별 시세를 포함한다. 공시 실제 원문 8,972건을 연결하며 시장영향의 뉴스·공시 모델과 Validation 보정을 서로 분리한다.
 - 시간 외삽 Test에서 뉴스 전문가는 9,560건, accuracy 0.5247 / macro F1 0.3745 / QWK 0.4754이고 공시 전문가는 4,615건, accuracy 0.4750 / macro F1 0.3216 / QWK 0.1550이다. 두 출처 모두 자체 TF-IDF 기준선보다 Macro-F1과 QWK가 높고 거래일 군집 부트스트랩 95% CI가 0보다 크다.
