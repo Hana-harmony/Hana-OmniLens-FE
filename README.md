@@ -11,14 +11,16 @@ Hana OmniLens API의 대외 소개·개발자 문서와 파트너 회원·관리
 - Hana Montana AI가 검증한 세무 서류의 OCR 값을 실제 경정청구서 PDF 좌표에 자동 적용
 - API가 렌더링한 공식 PDF 양식 위에서 값을 직접 편집한 뒤 PDF 생성·다운로드 또는 국세청 제출·회원 환급 승인 처리
 - 한국 주식 시장, 뉴스·공시, 금융 고유어, 세무 OCR REST/WebSocket 계약 문서
-- 모델 소개 화면에 Hana Montana AI(KF-DeBERTa + K-FNSPID), 파일 기반 K-FNSPID v3 가격반응 중요도 보조 모델, 공개 Test·운영 Gold·시간 외삽 Test 지표를 구분해 표시
+- 모델 소개 화면에 Hana Montana AI(KF-DeBERTa + K-FNSPID), 파일 기반 K-FNSPID v4 뉴스·공시 출처별 가격반응 전문가, 공개 Test·운영 Gold·시간 외삽 Test 지표를 구분해 표시
 
 ## 뉴스·공시 AI 표시 기준
 
 - 이벤트·종목 분류는 TF-IDF + One-vs-Rest Logistic Regression이다.
 - 감성은 KF-DeBERTa LoRA 80% + 기존 모델 20% 확률 앙상블이며 공개 금융 Test macro F1 `0.8840`, 실제 뉴스 Gold accuracy `0.9000`을 각각 표시한다.
-- 공시 의미 중요도와 시장영향을 분리한다. 의미 모델은 Gold를 보지 않고 Validation으로 제목+요약 뷰를 선택해 모델 단독 기본 공시 Gold 600건에서 accuracy 98.50% / macro F1 0.9470, 존속위험 정책 포함 910건에서 accuracy 99.89% / macro F1 0.9962를 기록했다. K-FNSPID v3는 550,662문서·10,691,998행 일별 시세·공시 실제 원문 8,972건과 Validation 전용 class-prior 보정을 사용한다.
-- 시장영향은 seed 17/42/73 중 Validation으로 선택한 seed 73을 표시한다. 2026-04-01 이후 Test 10,750건에서 accuracy 0.5095 / macro F1 0.3820 / QWK 0.4694이며 TF-IDF 기준선 QWK 0.3141을 넘는다. 공시 하위집합 회귀는 AI 모델 문서의 한계로 공개한다.
+- 공시 의미 중요도와 시장영향을 분리한다. 의미 모델은 Gold를 보지 않고 Validation으로 제목+요약 뷰를 선택해 모델 단독 기본 공시 Gold 600건에서 accuracy 98.50% / macro F1 0.9470, 존속위험 정책 포함 910건에서 accuracy 99.89% / macro F1 0.9962를 기록했다.
+- K-FNSPID v4는 뉴스 524,696건과 공시 722,989건, 총 1,247,685문서와 10,691,998행 파일 기반 일별 시세를 포함한다. 공시 실제 원문 8,972건을 연결하며 시장영향의 뉴스·공시 모델과 Validation 보정을 서로 분리한다.
+- 시간 외삽 Test에서 뉴스 전문가는 9,560건, accuracy 0.5247 / macro F1 0.3745 / QWK 0.4754이고 공시 전문가는 4,615건, accuracy 0.4750 / macro F1 0.3216 / QWK 0.1550이다. 두 출처 모두 자체 TF-IDF 기준선보다 Macro-F1과 QWK가 높고 거래일 군집 부트스트랩 95% CI가 0보다 크다.
+- 요청 `sourceType`과 시장영향 전문가의 출처가 다르면 추론을 거부한다. 공시 기준선은 독립 배포 gate를 통과하지 못해 공시 Transformer 장애 시 무조건 기준선으로 후퇴하지 않고 시장영향 필드를 생략한다.
 - REST·STOMP·raw WebSocket은 `importance`와 `marketImpactImportance/Score/Confidence`, 복합 `modelVersion`을 함께 보존하며 화면과 파트너 문서에서 서로 다른 신호로 표시한다.
 - 시장영향은 의미 중요도를 덮어쓰지 않고 등급·점수·confidence를 별도 제공한다. 단독 투자 신호나 인과적 중요도로 표현하지 않는다.
 
