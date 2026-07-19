@@ -29,6 +29,8 @@ Hana OmniLens API의 대외 소개·개발자 문서와 파트너 회원·관리
 - Node.js 22 이상
 - npm 10 이상
 - Hana OmniLens API: 기본 `http://127.0.0.1:8080`
+- 운영 FE: `https://hanaomni.cloud`
+- 운영 API: `https://api.hanaomni.cloud`
 
 ```bash
 npm ci
