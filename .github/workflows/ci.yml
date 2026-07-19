@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     concurrency:
-      group: hana-omnilens-fe-production
+      group: hana-omni-connect-fe-production
       cancel-in-progress: false
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

@@ -12,8 +12,8 @@ import {
   Route,
 } from './routing'
 
-const apiBaseUrl = import.meta.env.VITE_OMNILENS_API_BASE_URL
-if (!apiBaseUrl) throw new Error('VITE_OMNILENS_API_BASE_URL is required')
+const apiBaseUrl = import.meta.env.VITE_OMNI_CONNECT_API_BASE_URL
+if (!apiBaseUrl) throw new Error('VITE_OMNI_CONNECT_API_BASE_URL is required')
 type Locale = 'ko' | 'en'
 type User = { userId: string; username: string; name: string; phoneNumber: string; role: 'MEMBER' | 'ADMIN' }
 type Session = { accessToken: string; expiresAt: string; passwordChangeRequired: boolean; user: User }
@@ -48,7 +48,7 @@ const copy = {
     intro: '시세, 뉴스·공시 인텔리전스, 금융 고유어, 글로벌 세무 OCR을 안정적인 파트너 API로 제공합니다.',
     start: 'API 키 신청', explore: '개발자 문서 보기', trust: '실제 거래소 서비스에서 검증된 API',
     capabilities: '파트너 서비스에 필요한 핵심 기능', capabilityIntro: '하나금융의 데이터와 Hana Montana AI를 하나의 API 계약으로 연결합니다.',
-    cases: '구현된 서비스로 확인하세요', casesIntro: 'Hana OmniLens API와 연동된 현지 거래소의 실제 화면에서 세 가지 핵심 기능을 확인하세요.',
+    cases: '구현된 서비스로 확인하세요', casesIntro: 'Hana Omni-Connect API와 연동된 현지 거래소의 실제 화면에서 세 가지 핵심 기능을 확인하세요.',
     ai: 'Hana Montana AI', aiTitle: 'Hana Montana AI(KF-DeBERTa + K-FNSPID)', aiBody: 'KF-DeBERTa 금융 감성·공시 의미 중요도와 K-FNSPID v4 뉴스·공시 출처별 시장영향 전문가를 분리해 제공하는 전용 금융 AI입니다. 공개 Test와 운영 Gold를 분리하며, 품질 gate를 통과하지 못한 감성 후보는 기존 검증 모델로 fail closed합니다.',
   },
   en: {
@@ -57,7 +57,7 @@ const copy = {
     intro: 'Deliver live prices, news and disclosure intelligence, contextual terminology, and global tax OCR through one dependable partner API.',
     start: 'Request an API key', explore: 'Explore API docs', trust: 'Proven in a production-grade exchange experience',
     capabilities: 'Core intelligence for partner products', capabilityIntro: 'Hana Financial data and Hana Montana AI, delivered through one stable API contract.',
-    cases: 'See it working in a real product', casesIntro: 'Explore three core capabilities through live screens from the local exchange integrated with Hana OmniLens API.',
+    cases: 'See it working in a real product', casesIntro: 'Explore three core capabilities through live screens from the local exchange integrated with Hana Omni-Connect API.',
     ai: 'Hana Montana AI', aiTitle: 'Hana Montana AI(KF-DeBERTa + K-FNSPID)', aiBody: 'A dedicated financial AI that separates KF-DeBERTa sentiment and semantic disclosure materiality from K-FNSPID v4 source-routed news and disclosure market-impact experts. Public Test and operational Gold remain separate, and sentiment candidates that miss a quality gate fail closed to the validated existing model.',
   },
 } as const
@@ -277,7 +277,7 @@ const endpoints: Endpoint[] = [
   },
   {
     group: 'Tax OCR', method: 'POST', path: '/api/v1/tax/refund-cases/sync', title: '세무 환급 케이스 동기화', titleEn: 'Sync tax refund case',
-    description: '현지 증권사에서 신청한 세무 환급 케이스와 검증 완료 문서 스냅샷을 OmniLens 백오피스로 동기화합니다.', descriptionEn: 'Synchronizes a partner tax-refund case and verified-document snapshots to the OmniLens back office.',
+    description: '현지 증권사에서 신청한 세무 환급 케이스와 검증 완료 문서 스냅샷을 Omni-Connect 백오피스로 동기화합니다.', descriptionEn: 'Synchronizes a partner tax-refund case and verified-document snapshots to the Omni-Connect back office.',
     fields: [
       { name: 'caseId', location: 'body', type: 'string', required: true, description: '파트너 케이스 ID', descriptionEn: 'Partner case ID' },
       { name: 'accountId', location: 'body', type: 'string', required: true, description: '파트너 계좌 ID', descriptionEn: 'Partner account ID' },
@@ -316,7 +316,7 @@ const endpoints: Endpoint[] = [
       { name: 'destination', location: 'body', type: '/topic/partners/{partnerId}/alerts', required: true, description: '파트너 전체 이벤트 topic', descriptionEn: 'Partner-wide event topic' },
       { name: 'destination', location: 'body', type: '/topic/partners/{partnerId}/stocks/{stockCode}/alerts', description: '파트너 종목별 이벤트 topic', descriptionEn: 'Partner stock-specific event topic' },
     ],
-    requestBody: `CONNECT\naccept-version:1.2\nhost:api.hana-omnilens.example.com\n\n\u0000\nSUBSCRIBE\nid:alerts-0\ndestination:/topic/partners/demo-partner/alerts\nack:auto\n\n\u0000`,
+    requestBody: `CONNECT\naccept-version:1.2\nhost:api.hanaomni.cloud\n\n\u0000\nSUBSCRIBE\nid:alerts-0\ndestination:/topic/partners/demo-partner/alerts\nack:auto\n\n\u0000`,
     response: `{"eventId":"ALERT-...","sourceType":"NEWS","stockCode":"005930","sentiment":"POSITIVE","importance":"HIGH","marketImpactImportance":"MEDIUM","marketImpactScore":0.42,"marketImpactConfidence":0.81,"modelVersion":"financial-ml-...|impact:k-fnspid-impact-kf-deberta-lora-...","watchlistTarget":true,"holderTarget":false,"publishedAt":"2026-07-12T00:00:00Z"}`,
     protocol: 'STOMP',
   },
@@ -356,13 +356,13 @@ async function downloadCorrectionPdf(path: string, body: unknown, token: string)
 
 function storedSession(): Session | null {
   try {
-    const raw = sessionStorage.getItem('hana-omnilens-session')
+    const raw = sessionStorage.getItem('hana-omni-connect-session')
     if (!raw) return null
     const value = JSON.parse(raw) as Session
     if (!value.accessToken || !value.user?.role || Date.parse(value.expiresAt) <= Date.now()) throw new Error('invalid session')
     return value
   } catch {
-    sessionStorage.removeItem('hana-omnilens-session')
+    sessionStorage.removeItem('hana-omni-connect-session')
     return null
   }
 }
@@ -376,11 +376,11 @@ function useRoute(): [AppLocation, (route: Route, tab?: MemberTab | AdminTab) =>
 function App() {
   const [appLocation, navigate] = useRoute()
   const { route } = appLocation
-  const [locale, setLocale] = useState<Locale>(() => (localStorage.getItem('omnilens-locale') as Locale) || 'ko')
+  const [locale, setLocale] = useState<Locale>(() => (localStorage.getItem('omni-connect-locale') as Locale) || 'ko')
   const [session, setSession] = useState<Session | null>(storedSession)
-  const changeLocale = (next: Locale) => { setLocale(next); localStorage.setItem('omnilens-locale', next) }
-  const signOut = () => { sessionStorage.removeItem('hana-omnilens-session'); setSession(null); navigate('home') }
-  const updateSession = (next: Session) => { sessionStorage.setItem('hana-omnilens-session', JSON.stringify(next)); setSession(next) }
+  const changeLocale = (next: Locale) => { setLocale(next); localStorage.setItem('omni-connect-locale', next) }
+  const signOut = () => { sessionStorage.removeItem('hana-omni-connect-session'); setSession(null); navigate('home') }
+  const updateSession = (next: Session) => { sessionStorage.setItem('hana-omni-connect-session', JSON.stringify(next)); setSession(next) }
   const passwordChanged = (next: Session) => { updateSession(next); navigate(next.user.role === 'ADMIN' ? 'admin' : 'portal') }
   if (route === 'auth') return <AuthPage locale={locale} onLocale={changeLocale} onAuthenticated={(next) => { updateSession(next); navigate(next.passwordChangeRequired ? 'password' : next.user.role === 'ADMIN' ? 'admin' : 'portal') }} onHome={() => navigate('home')} />
   if (route === 'password' || session?.passwordChangeRequired) return <PasswordPage session={session} onChanged={passwordChanged} onHome={() => navigate('home')} onAdmin={(tab) => navigate('admin', tab)} onPortal={(tab) => navigate('portal', tab)} onSignOut={signOut} />
@@ -397,12 +397,12 @@ function Header({ locale, onLocale, navigate, session, onSignOut }: { locale: Lo
   return <header className="topbar"><Wordmark onClick={() => navigate('home')}/><button className="menu-toggle" aria-label={locale === 'ko' ? '메뉴 열기' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><span/><span/><span/></button><nav className={menuOpen ? 'open' : ''}><button onClick={() => scrollTo('capabilities')}>{t.nav[0]}</button><button onClick={() => scrollTo('use-cases')}>{t.nav[1]}</button><button onClick={() => scrollTo('ai-model')}>{t.nav[2]}</button><button onClick={() => { setMenuOpen(false); navigate('docs') }}>{t.docs}</button></nav><div className="header-actions">{session && <button className="admin-link" onClick={() => navigate(session.user.role === 'ADMIN' ? 'admin' : 'portal')}>{session.user.role === 'ADMIN' ? (locale === 'ko' ? '관리자 백오피스' : 'Admin') : (locale === 'ko' ? '파트너 포털' : 'Partner portal')}</button>}<div className="language-switch" aria-label="Language"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div>{session ? <><span className="user-name">{session.user.name}</span><button className="logout-button" onClick={onSignOut}>{locale === 'ko' ? '로그아웃' : 'Sign out'}</button></> : <button className="login-button" onClick={() => navigate('auth')}>{t.login}</button>}</div></header>
 }
 
-function Wordmark({ onClick, inverse = false }: { onClick: () => void; inverse?: boolean }) { return <button className={`wordmark${inverse ? ' inverse' : ''}`} onClick={onClick} aria-label="Hana OmniLens API 홈"><span>Hana</span><b>OmniLens</b><i>API</i></button> }
+function Wordmark({ onClick, inverse = false }: { onClick: () => void; inverse?: boolean }) { return <button className={`wordmark${inverse ? ' inverse' : ''}`} onClick={onClick} aria-label="Hana Omni-Connect API 홈"><span>Hana</span><b>Omni-Connect</b><i>API</i></button> }
 
 function Home({ locale, onLocale, navigate, session, onSignOut }: { locale: Locale; onLocale: (locale: Locale) => void; navigate: (route: Route) => void; session: Session | null; onSignOut: () => void }) {
   const t = copy[locale]
   return <div className="site-shell"><Header locale={locale} onLocale={onLocale} navigate={navigate} session={session} onSignOut={onSignOut}/><main>
-    <section className="hero"><div className="orb orb-one"/><div className="orb orb-two"/><div className="hero-copy"><p className="eyebrow">{t.heroTag}</p><h1>{t.hero.split('\n').map((line) => <span key={line}>{line}<br/></span>)}<em>{t.accent}</em></h1><p>{t.intro}</p><div className="actions"><button className="primary" onClick={() => navigate(session ? 'portal' : 'auth')}>{t.start}<span>→</span></button><button className="secondary" onClick={() => navigate('docs')}>{t.explore}</button></div><div className="trust-line"><span className="pulse-dot"/>{t.trust}</div></div><div className="hero-visual"><div className="data-ring ring-one"/><div className="data-ring ring-two"/><img className="hero-logo logo-on-light" src="/brand/hana-omnilens-api.png" alt="Hana OmniLens API"/><div className="floating-card card-market"><span>PARTNER API</span><b>REST</b><small>Request / Response</small></div><div className="floating-card card-signal"><span>LIVE STREAM</span><b>WEBSOCKET</b><small>Real-time events</small></div></div></section>
+    <section className="hero"><div className="orb orb-one"/><div className="orb orb-two"/><div className="hero-copy"><p className="eyebrow">{t.heroTag}</p><h1>{t.hero.split('\n').map((line) => <span key={line}>{line}<br/></span>)}<em>{t.accent}</em></h1><p>{t.intro}</p><div className="actions"><button className="primary" onClick={() => navigate(session ? 'portal' : 'auth')}>{t.start}<span>→</span></button><button className="secondary" onClick={() => navigate('docs')}>{t.explore}</button></div><div className="trust-line"><span className="pulse-dot"/>{t.trust}</div></div><div className="hero-visual"><div className="data-ring ring-one"/><div className="data-ring ring-two"/><img className="hero-logo logo-on-light" src="/brand/hana-omni-connect-api.png" alt="Hana Omni-Connect API"/><div className="floating-card card-market"><span>PARTNER API</span><b>REST</b><small>Request / Response</small></div><div className="floating-card card-signal"><span>LIVE STREAM</span><b>WEBSOCKET</b><small>Real-time events</small></div></div></section>
     <Ticker/>
     <section id="capabilities" className="section"><p className="eyebrow">API CAPABILITIES</p><div className="section-head"><h2>{t.capabilities}</h2><p>{t.capabilityIntro}</p></div><div className="capability-grid"><Capability number="01" title={locale === 'ko' ? '실시간 시장 데이터' : 'Live market data'} body={locale === 'ko' ? '시세, 지수, 호가와 매매 제한을 일관된 계약으로 제공합니다.' : 'Quotes, indices, order books, and trading restrictions through one contract.'}/><Capability number="02" title={locale === 'ko' ? '뉴스·공시 인텔리전스' : 'News & disclosures'} body={locale === 'ko' ? '번역 전문, 감성, 중요도와 AI 분석을 함께 제공합니다.' : 'Translated full text, sentiment, materiality, and AI analysis.'}/><Capability number="03" title={locale === 'ko' ? '글로벌 세무 OCR' : 'Global tax OCR'} body={locale === 'ko' ? '3종 세무 서류의 OCR·위변조 위험·필수값을 검증합니다.' : 'OCR and risk validation for three essential tax documents.'}/><Capability number="04" title={locale === 'ko' ? '고유어·실시간 알림' : 'Terms & live alerts'} body={locale === 'ko' ? '문맥 설명과 보유·관심종목 이벤트를 실시간 전달합니다.' : 'Contextual term guidance and portfolio-aware real-time alerts.'}/></div></section>
     <ProductStory locale={locale} title={t.cases} intro={t.casesIntro}/>
@@ -422,17 +422,43 @@ function Showcase({ image, tag, title }: { image: string; tag: string; title: st
 
 function ProductStory({ locale, title, intro }: { locale: Locale; title: string; intro: string }) {
   const [active, setActive] = useState(0)
+  const [activeSlide, setActiveSlide] = useState(0)
   useEffect(() => { const elements = [...document.querySelectorAll<HTMLElement>('[data-story-step]')]; const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.storyStep)) }), { rootMargin: '-38% 0px -38% 0px' }); elements.forEach((element) => observer.observe(element)); return () => observer.disconnect() }, [])
+  useEffect(() => setActiveSlide(0), [active])
   const stories = locale === 'ko' ? [
-    { tag: '핵심 기능 01', title: '한국 증시 인텔리전스', body: '신규 뉴스·공시가 발생하면 수집·분석 파이프라인을 거쳐 현지 증권사에 REST와 WebSocket으로 전달합니다.', detail: '보유·관심종목 이벤트를 실시간으로 연결해 해외 MTS 피드와 알림에 활용합니다.', points: ['KF-DeBERTa 감성·공시 의미 중요도와 K-FNSPID 가격반응의 독립 분류', '로컬 LLM 기반 번역과 What·Why·Impact 요약', 'RAG 기반 한국 증시 고유어 원클릭 해설', '섹터·산업·기업 매칭과 글로벌 피어 기업 매칭'], image: '/showcase/exchange-market.png', focus: 'focus-news' },
-    { tag: '핵심 기능 02', title: '실시간 종목 스크리너', body: '시계열 ML 예측 모델이 외국인 보유 제한 32개 종목의 장중 외국인 지분율 예상치를 제공합니다.', detail: '실시간 환율 적용 시세를 WebSocket으로 제공하고 호가 틱·VI·가격 제한·거래정지·외국인 한도를 주문 전 필터링 신호로 반환합니다.', points: ['KIS·KRX 기반 현재가, 지수, 호가, 일봉·분봉 조회', '요청 통화 환산 시세와 실시간 quote replay', '제한 신호와 출처·계산 버전을 포함한 주문 가능 여부'], image: '/showcase/exchange-quotes.png', focus: 'focus-quotes' },
-    { tag: '핵심 기능 03', title: '글로벌 세무 처리 자동화', body: '배당소득 제한세율 적용에 필요한 거주자 증명서, 아포스티유, 제한세율 적용신청서를 OCR 기반으로 검증합니다.', detail: '문서 유형·필수 필드·국가·문서 간 일관성·위변조 위험을 확인하고 검토 상태와 근거를 반환합니다.', points: ['파일 형식·크기·magic byte·MIME 일치 검사', '문서별 OCR parser·reviewer와 누락 필드 탐지', 'VERIFIED·REVIEW_REQUIRED·REJECTED 상태와 model version 제공'], image: '/showcase/exchange-tax.png', focus: 'focus-tax' },
+    { tag: '핵심 기능 01', title: '한국 증시 인텔리전스', body: '새로운 뉴스·공시 발생 시 파이프라인을 통해 WebSocket 알림과 REST를 제공합니다.', detail: '해외 MTS 사용자의 보유·관심 종목 정보를 실시간으로 연결합니다.', points: ['보유·관심 종목 실시간 알림', '금융 특화 NLP 감성·중요도 분류', '로컬 LLM 번역과 What·Why·Impact 분석', 'RAG 고유어 해설과 글로벌 기업 매칭'], slides: [
+      { image: '/showcase/omni-connect/core-01-alerts.png', alt: '관심 종목 등록과 실시간 알림 화면' },
+      { image: '/showcase/omni-connect/core-01-classification.png', alt: '뉴스 호재·악재와 중요도 분류 화면' },
+      { image: '/showcase/omni-connect/core-01-explanation.png', alt: '한국 증시 고유어 해설과 AI 분석 요약 화면' },
+      { image: '/showcase/omni-connect/core-01-global-peers.png', alt: '글로벌 기업 매칭 AI 화면' },
+    ] },
+    { tag: '핵심 기능 02', title: '거래 제한 종목 스크리너', body: '시계열 ML 예측 모델로 외국인 보유 제한 32개 종목의 장중 외국인 지분율 예측치를 제공합니다.', detail: 'WebSocket 실시간 환율 적용 시세와 체결 제한 종목 정보를 필터링해 제공합니다.', points: ['금일 외국인 지분율 예측 경계', '실시간 환율 적용 가격', 'VI 가격 급등락과 상·하한가 도달 안내'], slides: [
+      { image: '/showcase/omni-connect/core-02-ownership.png', alt: '외국인 지분율 예측 경계 화면' },
+      { image: '/showcase/omni-connect/core-02-restrictions.png', alt: 'VI와 상하한가 거래 제한 안내 화면' },
+    ] },
+    { tag: '핵심 기능 03', title: '글로벌 세무 처리 자동화', body: '수작업 기반 세무 처리 절차를 디지털화해 모바일 절세 신청을 지원합니다.', detail: 'OCR로 제출 서류 정보를 추출하고 누락·오기입과 문서 간 일치 여부를 검증합니다.', points: ['개인정보 활용 동의와 거주자 증명서 업로드', '아포스티유·제한세율신청서 업로드', '서명·납세번호·국적·주소 등 서류 교차 검증'], slides: [
+      { image: '/showcase/omni-connect/core-03-intake.png', alt: '세무 신청과 거주자 증명서 업로드 화면' },
+      { image: '/showcase/omni-connect/core-03-validation.png', alt: '아포스티유와 제한세율신청서 교차 검증 화면' },
+    ] },
   ] : [
-    { tag: 'CORE 01', title: 'Korean market intelligence', body: 'New news and disclosures flow through collection and analysis, then reach partner brokerages over REST and WebSocket.', detail: 'Portfolio and watchlist events power live overseas MTS feeds and alerts.', points: ['Separate KF-DeBERTa sentiment and semantic materiality from K-FNSPID market impact', 'Local-LLM translation and What·Why·Impact summaries', 'RAG explanations for Korean market terminology', 'Sector, industry, company, and global-peer matching'], image: '/showcase/exchange-market.png', focus: 'focus-news' },
-    { tag: 'CORE 02', title: 'Real-time stock screener', body: 'A time-series ML model estimates intraday foreign ownership for 32 foreign-limit stocks.', detail: 'WebSocket FX-adjusted quotes and order-book-tick restrictions support pre-trade screening.', points: ['KIS and KRX quotes, indices, order books, and charts', 'Currency-converted quote replay', 'Sourced VI, price-limit, suspension, and foreign-limit signals'], image: '/showcase/exchange-quotes.png', focus: 'focus-quotes' },
-    { tag: 'CORE 03', title: 'Global tax automation', body: 'OCR validation covers residence certificates, apostilles, and reduced withholding applications.', detail: 'Format, required fields, cross-document consistency, and fraud risk are returned with review evidence.', points: ['File type, size, magic-byte, and MIME validation', 'Document-specific OCR parsers and reviewers', 'VERIFIED, REVIEW_REQUIRED, or REJECTED with model version'], image: '/showcase/exchange-tax.png', focus: 'focus-tax' },
+    { tag: 'CORE 01', title: 'Korean market intelligence', body: 'New news and disclosures are delivered through the pipeline over WebSocket alerts and REST.', detail: 'Portfolio and watchlist intelligence reaches overseas MTS users in real time.', points: ['Live portfolio and watchlist alerts', 'Financial sentiment and materiality classification', 'Local-LLM translation and What·Why·Impact analysis', 'RAG terminology guidance and global-company matching'], slides: [
+      { image: '/showcase/omni-connect/core-01-alerts.png', alt: 'Watchlist registration and live notification screens' },
+      { image: '/showcase/omni-connect/core-01-classification.png', alt: 'News sentiment and priority classification screens' },
+      { image: '/showcase/omni-connect/core-01-explanation.png', alt: 'Korean market terminology and AI analysis screens' },
+      { image: '/showcase/omni-connect/core-01-global-peers.png', alt: 'Global company matching screens' },
+    ] },
+    { tag: 'CORE 02', title: 'Restricted-stock screener', body: 'A time-series ML model estimates intraday foreign ownership for 32 foreign-limit stocks.', detail: 'WebSocket FX-adjusted quotes and restricted-stock signals are filtered for partner services.', points: ['Next-day foreign-ownership boundaries', 'Live FX-adjusted prices', 'VI and daily price-limit guidance'], slides: [
+      { image: '/showcase/omni-connect/core-02-ownership.png', alt: 'Foreign-ownership forecast boundary screens' },
+      { image: '/showcase/omni-connect/core-02-restrictions.png', alt: 'VI and daily price-limit guidance screens' },
+    ] },
+    { tag: 'CORE 03', title: 'Global tax automation', body: 'Manual tax-processing procedures are digitized into a mobile tax-benefit application.', detail: 'OCR extracts submitted documents and validates omissions, incorrect entries, and cross-document consistency.', points: ['Consent and certificate-of-residence upload', 'Apostille and reduced-rate application upload', 'Cross-checks for signatures, tax IDs, nationality, and address'], slides: [
+      { image: '/showcase/omni-connect/core-03-intake.png', alt: 'Tax application and certificate upload screens' },
+      { image: '/showcase/omni-connect/core-03-validation.png', alt: 'Apostille and reduced-rate application validation screens' },
+    ] },
   ]
-  return <section id="use-cases" className="product-story"><div className="story-heading"><p className="eyebrow">LIVE IMPLEMENTATION</p><h2>{title}</h2><p>{intro}</p></div><div className="story-layout"><div className="story-copy">{stories.map((story, index) => <article key={story.tag} data-story-step={index} className={active === index ? 'active' : ''}><span>{story.tag}</span><h3>{story.title}</h3><p>{story.body}</p><ul>{story.points.map((point) => <li key={point}>{point}</li>)}</ul><small>{story.detail}</small></article>)}</div><div className="story-stage"><div className="device-frame">{stories.map((story, index) => <div className={`story-screen ${story.focus}${active === index ? ' active' : ''}`} key={story.tag}><img src={story.image} alt={story.title}/><span className="focus-ring"/><div className="story-caption"><b>{story.tag}</b><span>{story.detail}</span></div></div>)}</div><div className="story-progress">{stories.map((story, index) => <span className={active === index ? 'active' : ''} key={story.tag}/>)}</div></div></div></section>
+  const currentStory = stories[active]
+  const currentSlide = currentStory.slides[activeSlide] ?? currentStory.slides[0]
+  return <section id="use-cases" className="product-story"><div className="story-heading"><p className="eyebrow">LIVE IMPLEMENTATION</p><h2>{title}</h2><p>{intro}</p></div><div className="story-layout"><div className="story-copy">{stories.map((story, index) => <article key={story.tag} data-story-step={index} className={active === index ? 'active' : ''}><span>{story.tag}</span><h3>{story.title}</h3><p>{story.body}</p><ul>{story.points.map((point) => <li key={point}>{point}</li>)}</ul><small>{story.detail}</small><div className="story-mobile-gallery">{story.slides.map((slide) => <a href={slide.image} target="_blank" rel="noreferrer" key={slide.image}><img src={slide.image} alt={slide.alt}/></a>)}</div></article>)}</div><div className="story-stage"><figure className="story-board"><a href={currentSlide.image} target="_blank" rel="noreferrer" aria-label={locale === 'ko' ? '피그마 원본 화면 크게 보기' : 'Open the Figma reference screen'}><img src={currentSlide.image} alt={currentSlide.alt}/></a><figcaption><div><b>{currentStory.tag}</b><span>{currentStory.title}</span></div><div className="story-slide-controls"><button type="button" aria-label={locale === 'ko' ? '이전 화면' : 'Previous screen'} onClick={() => setActiveSlide((activeSlide - 1 + currentStory.slides.length) % currentStory.slides.length)}>←</button><span>{activeSlide + 1} / {currentStory.slides.length}</span><button type="button" aria-label={locale === 'ko' ? '다음 화면' : 'Next screen'} onClick={() => setActiveSlide((activeSlide + 1) % currentStory.slides.length)}>→</button></div></figcaption></figure><div className="story-progress">{stories.map((story, index) => <button type="button" aria-label={story.title} onClick={() => setActive(index)} className={active === index ? 'active' : ''} key={story.tag}/>)}</div></div></div></section>
 }
 
 function ModelPerformance({ locale }: { locale: Locale }) {
@@ -518,14 +544,14 @@ function curlExample(endpoint: Endpoint): string {
       "  --header 'Upgrade: websocket' \\",
       "  --header 'Sec-WebSocket-Version: 13' \\",
       "  --header 'Sec-WebSocket-Key: <RANDOM_BASE64_KEY>' \\",
-      "  --header 'X-HANA-OMNILENS-API-KEY: <SERVER_API_KEY>'",
+      "  --header 'X-HANA-OMNI-CONNECT-API-KEY: <SERVER_API_KEY>'",
     ].join('\n')
   }
   const lines = [
     `curl --request ${endpoint.method} \\`,
     `  --url '${url}' \\`,
     "  --header 'Accept: application/json' \\",
-    `  --header 'X-HANA-OMNILENS-API-KEY: <SERVER_API_KEY>'${endpoint.requestBody ? ' \\' : ''}`,
+    `  --header 'X-HANA-OMNI-CONNECT-API-KEY: <SERVER_API_KEY>'${endpoint.requestBody ? ' \\' : ''}`,
   ]
   if (endpoint.requestBody) lines.push("  --header 'Content-Type: application/json' \\", `  --data '${endpoint.requestBody}'`)
   return lines.join('\n')
@@ -535,7 +561,7 @@ function javaExample(endpoint: Endpoint): string {
   const url = endpointUrl(endpoint)
   if (endpoint.method === 'WS') {
     const sendFrame = endpoint.protocol === 'STOMP'
-      ? `var connectFrame = "CONNECT\\naccept-version:1.2\\nhost:api.hana-omnilens.example.com\\n\\n\\0";
+      ? `var connectFrame = "CONNECT\\naccept-version:1.2\\nhost:api.hanaomni.cloud\\n\\n\\0";
 socket.sendText(connectFrame, true).join();
 var subscribeFrame = "SUBSCRIBE\\nid:alerts-0\\ndestination:/topic/partners/demo-partner/alerts\\nack:auto\\n\\n\\0";
 socket.sendText(subscribeFrame, true).join();`
@@ -549,7 +575,7 @@ import java.util.concurrent.CompletionStage;
 
 var client = HttpClient.newHttpClient();
 var socket = client.newWebSocketBuilder()
-    .header("X-HANA-OMNILENS-API-KEY", System.getenv("OMNILENS_API_KEY"))
+    .header("X-HANA-OMNI-CONNECT-API-KEY", System.getenv("OMNI_CONNECT_API_KEY"))
     .buildAsync(URI.create("${url.replace(/^http/, 'ws')}"), new WebSocket.Listener() {
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
@@ -572,7 +598,7 @@ import java.net.http.HttpResponse;
 var request = HttpRequest.newBuilder(URI.create("${url}"))
     .header("Accept", "application/json")
     .header("Content-Type", "application/json")
-    .header("X-HANA-OMNILENS-API-KEY", System.getenv("OMNILENS_API_KEY"))
+    .header("X-HANA-OMNI-CONNECT-API-KEY", System.getenv("OMNI_CONNECT_API_KEY"))
     .method("${endpoint.method}", ${body})
     .build();
 
@@ -580,7 +606,7 @@ var response = HttpClient.newHttpClient()
     .send(request, HttpResponse.BodyHandlers.ofString());
 
 if (response.statusCode() / 100 != 2) {
-    throw new IllegalStateException("OmniLens API error: " + response.statusCode());
+    throw new IllegalStateException("Omni-Connect API error: " + response.statusCode());
 }
 System.out.println(response.body());`
 }
@@ -625,7 +651,7 @@ function DocsPage({ locale, onLocale, onHome }: { locale: Locale; onLocale: (loc
         {filtered.length === 0 && <p className="docs-empty">{locale === 'ko' ? '검색 결과가 없습니다.' : 'No APIs found.'}</p>}
       </aside>
       <main className="docs-content">
-        <p className="breadcrumb">Hana OmniLens API / {selected.group}</p>
+        <p className="breadcrumb">Hana Omni-Connect API / {selected.group}</p>
         <div className="docs-scope">{locale === 'ko' ? '현지 증권사 서버 연동용 계약 · 운영자 수집·발행·재처리·재학습 및 포털 내부 API 제외' : 'Contract for partner brokerage servers · excludes operator collection, publishing, reprocessing, training, and portal-internal APIs'}</div>
         <h1>{locale === 'ko' ? selected.title : selected.titleEn}</h1>
         <p className="docs-description">{locale === 'ko' ? selected.description : selected.descriptionEn}</p>
@@ -640,7 +666,7 @@ function DocsPage({ locale, onLocale, onHome }: { locale: Locale; onLocale: (loc
             ? '발급받은 API 키를 현지 증권사 서버에만 보관하고 모든 REST 요청과 WebSocket Upgrade 요청의 인증 헤더로 전송합니다. 브라우저나 모바일 앱에 키를 내장하지 마세요.'
             : 'Store the issued API key only on the partner brokerage server and send it in the authentication header for every REST request and WebSocket Upgrade request. Never embed the key in a browser or mobile app.'}</p>
           <div className="parameter">
-            <code>X-HANA-OMNILENS-API-KEY</code>
+            <code>X-HANA-OMNI-CONNECT-API-KEY</code>
             <span>header · required</span>
           </div>
         </section>
@@ -705,7 +731,7 @@ function PasswordPage({ session, onChanged, onHome, onAdmin, onPortal, onSignOut
   const navItems: ConsoleNavItem<AdminTab>[] = admin
     ? [{ id: 'dashboard', label: '대시보드' }, { id: 'api-keys', label: 'API 키 관리' }, { id: 'analytics', label: '고유어 설명 분석' }, { id: 'tax', label: '제한세율 적용신청 처리' }]
     : [{ id: 'dashboard', label: '대시보드' }, { id: 'api-keys', label: 'API 키 관리' }]
-  return <ConsoleShell title={admin ? 'Hana OmniLens 관리자 백오피스' : '파트너 포털'} user={session.user} navItems={navItems} activeNav="password" onNavigate={(tab) => admin ? onAdmin(tab) : onPortal(tab as MemberTab)} onHome={onHome} onPassword={() => undefined} onSignOut={onSignOut}><div className="password-page embedded">{form}</div></ConsoleShell>
+  return <ConsoleShell title={admin ? 'Hana Omni-Connect 관리자 백오피스' : '파트너 포털'} user={session.user} navItems={navItems} activeNav="password" onNavigate={(tab) => admin ? onAdmin(tab) : onPortal(tab as MemberTab)} onHome={onHome} onPassword={() => undefined} onSignOut={onSignOut}><div className="password-page embedded">{form}</div></ConsoleShell>
 }
 
 function MemberPortal({ session, activeTab, onNavigate, onSignIn, onHome, onAdmin, onPassword, onSignOut }: { session: Session | null; activeTab: MemberTab; onNavigate: (tab: MemberTab) => void; onSignIn: () => void; onHome: () => void; onAdmin: () => void; onPassword: () => void; onSignOut: () => void }) {
@@ -740,7 +766,7 @@ function AdminPage({ session, activeTab, onNavigate, onSignIn, onHome, onPasswor
   const keyAction = async (id: string, action: 'approve' | 'reject' | 'reissue' | 'revoke') => { try { const reason = action === 'reject' ? window.prompt('반려 사유를 입력하세요.') : null; if (action === 'reject' && !reason?.trim()) return; await api(`/api/v1/portal/admin/api-key-applications/${id}/${action}`, { method: 'POST', ...(reason ? { body: JSON.stringify({ reason }) } : {}) }, session.accessToken); await refresh() } catch (error) { setMessage(error instanceof Error ? error.message : 'API 키 처리에 실패했습니다.') } }
   const navItems: ConsoleNavItem<AdminTab>[] = [{ id: 'dashboard', label: '대시보드' }, { id: 'api-keys', label: 'API 키 관리' }, { id: 'analytics', label: '고유어 설명 분석' }, { id: 'tax', label: '제한세율 적용신청 처리' }]
   const totalClicks = analytics.terms.reduce((sum, stat) => sum + stat.clickCount, 0)
-  return <ConsoleShell title="Hana OmniLens 관리자 백오피스" user={session.user} navItems={navItems} activeNav={activeTab} onNavigate={onNavigate} onHome={onHome} onPassword={onPassword} onSignOut={onSignOut}>{message && <p className="notice">{message}</p>}{activeTab === 'dashboard' && <><div className="console-hero"><div><p className="eyebrow">ADMIN OVERVIEW</p><h2>운영 현황</h2><p>API 키, 고유어 설명 분석, 제한세율 적용신청을 탭별로 관리합니다.</p></div><button className="secondary" onClick={() => void refresh()}>새로고침</button></div><div className="admin-summary"><Summary label="API 키 신청" value={applications.length}/><Summary label="제한세율 적용신청" value={cases.length}/><Summary label="고유어 설명 클릭" value={totalClicks}/></div><div className="admin-quick-links"><button onClick={() => onNavigate('api-keys')}><span>API KEY</span><b>API 키 신청 처리</b><i>→</i></button><button onClick={() => onNavigate('analytics')}><span>ANALYTICS</span><b>고유어 설명 분석</b><i>→</i></button><button onClick={() => onNavigate('tax')}><span>TAX</span><b>경정청구서 처리</b><i>→</i></button></div></>}{activeTab === 'api-keys' && <section className="admin-panel tab-panel"><div className="panel-title"><div><p className="eyebrow">API KEY MANAGEMENT</p><h1>API 키 관리</h1><p>신청 승인·반려와 발급 키 재발급·폐기를 관리합니다.</p></div></div><ApplicationTable applications={applications} admin onAdminAction={keyAction}/></section>}{activeTab === 'analytics' && <section className="tab-panel"><Analytics analytics={analytics} onPeriod={(period) => void loadAnalytics(period).catch((error) => setMessage(error.message))}/></section>}{activeTab === 'tax' && <section className="tab-panel"><div className="page-heading"><div><p className="eyebrow">TAX OPERATIONS</p><h1>제한세율 적용신청 처리</h1><p>AI 검증 서류로 경정청구서를 작성하고 승인합니다.</p></div></div><TaxAdmin cases={cases} token={session.accessToken} onChanged={refresh}/></section>}</ConsoleShell>
+  return <ConsoleShell title="Hana Omni-Connect 관리자 백오피스" user={session.user} navItems={navItems} activeNav={activeTab} onNavigate={onNavigate} onHome={onHome} onPassword={onPassword} onSignOut={onSignOut}>{message && <p className="notice">{message}</p>}{activeTab === 'dashboard' && <><div className="console-hero"><div><p className="eyebrow">ADMIN OVERVIEW</p><h2>운영 현황</h2><p>API 키, 고유어 설명 분석, 제한세율 적용신청을 탭별로 관리합니다.</p></div><button className="secondary" onClick={() => void refresh()}>새로고침</button></div><div className="admin-summary"><Summary label="API 키 신청" value={applications.length}/><Summary label="제한세율 적용신청" value={cases.length}/><Summary label="고유어 설명 클릭" value={totalClicks}/></div><div className="admin-quick-links"><button onClick={() => onNavigate('api-keys')}><span>API KEY</span><b>API 키 신청 처리</b><i>→</i></button><button onClick={() => onNavigate('analytics')}><span>ANALYTICS</span><b>고유어 설명 분석</b><i>→</i></button><button onClick={() => onNavigate('tax')}><span>TAX</span><b>경정청구서 처리</b><i>→</i></button></div></>}{activeTab === 'api-keys' && <section className="admin-panel tab-panel"><div className="panel-title"><div><p className="eyebrow">API KEY MANAGEMENT</p><h1>API 키 관리</h1><p>신청 승인·반려와 발급 키 재발급·폐기를 관리합니다.</p></div></div><ApplicationTable applications={applications} admin onAdminAction={keyAction}/></section>}{activeTab === 'analytics' && <section className="tab-panel"><Analytics analytics={analytics} onPeriod={(period) => void loadAnalytics(period).catch((error) => setMessage(error.message))}/></section>}{activeTab === 'tax' && <section className="tab-panel"><div className="page-heading"><div><p className="eyebrow">TAX OPERATIONS</p><h1>제한세율 적용신청 처리</h1><p>AI 검증 서류로 경정청구서를 작성하고 승인합니다.</p></div></div><TaxAdmin cases={cases} token={session.accessToken} onChanged={refresh}/></section>}</ConsoleShell>
 }
 
 function ConsoleShell<T extends string>({ title, user, navItems, activeNav, onNavigate, onHome, onPassword, onSignOut, adminAction, children }: { title: string; user: User; navItems: ConsoleNavItem<T>[]; activeNav: T | 'password'; onNavigate: (tab: T) => void; onHome: () => void; onPassword: () => void; onSignOut: () => void; adminAction?: () => void; children: React.ReactNode }) { return <div className="console-shell"><aside className="console-sidebar"><Wordmark onClick={onHome}/><p>{title}</p><nav aria-label="콘솔 메뉴">{navItems.map((item) => <button key={item.id} className={activeNav === item.id ? 'active' : ''} aria-current={activeNav === item.id ? 'page' : undefined} onClick={() => onNavigate(item.id)}>{item.label}</button>)}<button className={activeNav === 'password' ? 'active' : ''} aria-current={activeNav === 'password' ? 'page' : undefined} onClick={onPassword}>비밀번호 변경</button>{adminAction && <button onClick={adminAction}>관리자 백오피스 →</button>}</nav><div className="sidebar-user"><b>{user.name}</b><span>{user.role}</span><button onClick={onSignOut}>로그아웃</button></div></aside><main className="console-main">{children}</main></div> }
