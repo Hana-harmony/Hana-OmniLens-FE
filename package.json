@@ -1,10 +1,10 @@
 {
-  "name": "hana-omnilens-fe",
+  "name": "hana-omni-connect-fe",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode production",
     "test": "node --experimental-strip-types --test test/*.test.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
