@@ -165,6 +165,39 @@ pre, code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospac
 .performance-section { padding: 125px max(50px, calc((100% - 1240px) / 2)); background: #f4f8f7; }
 .performance-head { margin-bottom: 54px; }
 .performance-head .eyebrow { margin-bottom: 14px; }
+.research-spotlight { display: grid; grid-template-columns: .95fr 1.05fr; gap: 54px; align-items: center; margin-bottom: 24px; padding: 48px; overflow: hidden; border-radius: 26px; background: radial-gradient(circle at 86% 18%, rgba(73, 207, 177, .2), transparent 34%), linear-gradient(135deg, #062e29, #075f56); color: #fff; box-shadow: 0 28px 70px rgba(5, 68, 59, .18); }
+.research-copy .eyebrow { color: #76e1ca; }
+.research-copy h3 { max-width: 520px; margin: 10px 0 18px; font-size: clamp(30px, 3.2vw, 44px); line-height: 1.14; letter-spacing: -2px; }
+.research-copy > p:not(.eyebrow) { max-width: 560px; margin: 0; color: #c7ddd8; font-size: 14px; line-height: 1.75; }
+.research-copy dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 32px 0 0; }
+.research-copy dl div { min-width: 0; padding: 15px; border: 1px solid rgba(167, 235, 220, .2); border-radius: 12px; background: rgba(255, 255, 255, .07); }
+.research-copy dt { color: #75e4cc; font-size: clamp(18px, 2vw, 25px); font-weight: 800; font-variant-numeric: tabular-nums; }
+.research-copy dd { margin: 5px 0 0; color: #bad4ce; font-size: 10px; line-height: 1.4; }
+.paper-figure { position: relative; min-height: 530px; margin: 0; }
+.paper-figure img { position: absolute; display: block; border: 1px solid rgba(255, 255, 255, .25); background: #fff; box-shadow: 0 24px 55px rgba(0, 0, 0, .3); }
+.paper-figure img:first-child { top: 5px; left: 2%; width: 69%; transform: rotate(-2.2deg); }
+.paper-figure img:nth-child(2) { right: 1%; bottom: 28px; width: 43%; transform: rotate(2.4deg); }
+.paper-figure figcaption { position: absolute; right: 3%; bottom: 0; color: #a8cbc4; font-size: 9px; }
+.comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
+.comparison-card { overflow: hidden; border: 1px solid #cddeda; border-radius: 20px; background: #fff; box-shadow: 0 16px 45px rgba(24, 67, 59, .06); }
+.comparison-card > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; padding: 24px 26px; background: #e9f5f2; }
+.comparison-card > header h3 { margin: 0; font-size: 20px; letter-spacing: -.7px; }
+.comparison-card > header p { margin: 6px 0 0; color: #607873; font-size: 11px; }
+.comparison-card > header > span { max-width: 180px; padding: 7px 9px; border-radius: 30px; background: #fff; color: #346b61; font-size: 9px; font-weight: 800; line-height: 1.4; text-align: center; }
+.comparison-rows { display: grid; gap: 14px; padding: 20px; }
+.comparison-item { padding: 18px; border: 1px solid #e1eae8; border-radius: 12px; }
+.comparison-item-head { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; margin-bottom: 15px; }
+.comparison-item-head strong { font-size: 14px; }
+.comparison-item-head b { color: var(--hana); font-size: 11px; font-variant-numeric: tabular-nums; }
+.comparison-result { margin-top: 11px; }
+.comparison-result > span { display: block; margin-bottom: 5px; color: #536b65; font-size: 10px; font-weight: 700; overflow-wrap: anywhere; }
+.comparison-result > div { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 12px; align-items: center; }
+.comparison-result em { display: block; height: 9px; overflow: hidden; border-radius: 20px; background: #e4ebe9; }
+.comparison-result i { display: block; height: 100%; border-radius: inherit; background: #aab5b2; }
+.comparison-result b { color: #5e6f6b; font-size: 11px; font-style: normal; font-variant-numeric: tabular-nums; text-align: right; }
+.comparison-result.hana > span, .comparison-result.hana b { color: var(--hana-dark); }
+.comparison-result.hana i { background: linear-gradient(90deg, var(--hana-dark), #2cc2a3); }
+.comparison-note { margin: 0; padding: 0 24px 22px; color: #71847f; font-size: 10px; line-height: 1.6; }
 .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 18px; }
 .feature-card { padding: 28px; border: 1px solid #d6e2df; border-radius: 18px; background: #fff; box-shadow: 0 16px 45px rgba(24, 67, 59, .06); }
 .feature-card h3 { margin: 0 0 13px; font-size: 20px; letter-spacing: -.7px; }
@@ -408,6 +441,11 @@ footer > span { text-align: right; line-height: 1.5; }
   .ai-section { grid-template-columns: 1fr; gap: 20px; }
   .ai-logo-wrap { min-height: 360px; }
   .ai-logo-wrap img { width: min(460px, 84vw); }
+  .research-spotlight { grid-template-columns: 1fr; padding: 38px; }
+  .paper-figure { min-height: 590px; }
+  .paper-figure img:first-child { width: 65%; }
+  .paper-figure img:nth-child(2) { width: 39%; }
+  .comparison-grid { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .benchmark-card { grid-column: span 2; }
   .performance-section { padding: 85px 28px; }
@@ -459,6 +497,20 @@ footer > span { text-align: right; line-height: 1.5; }
   .card-signal { right: 0; bottom: 34px; }
   .section, .ai-section { padding: 68px 20px; }
   .section-head h2, .ai-section h2, .story-heading h2, .performance-head h2 { font-size: 34px; letter-spacing: -2px; }
+  .research-spotlight { gap: 28px; padding: 25px 20px; border-radius: 20px; }
+  .research-copy h3 { font-size: 31px; letter-spacing: -1.5px; }
+  .research-copy dl { grid-template-columns: 1fr; }
+  .research-copy dl div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .research-copy dd { text-align: right; }
+  .paper-figure { min-height: 430px; }
+  .paper-figure img:first-child { left: 0; width: 76%; }
+  .paper-figure img:nth-child(2) { right: 0; bottom: 25px; width: 49%; }
+  .comparison-card > header { grid-template-columns: 1fr; }
+  .comparison-card > header > span { max-width: none; justify-self: start; }
+  .comparison-rows { padding: 14px; }
+  .comparison-item { padding: 15px; }
+  .comparison-item-head { align-items: flex-start; }
+  .comparison-item-head b { text-align: right; }
   .story-heading h2 { word-break: keep-all; }
   .capability-grid, .feature-grid { grid-template-columns: 1fr; }
   .benchmark-card { grid-column: auto; }
