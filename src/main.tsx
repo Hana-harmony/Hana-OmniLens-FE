@@ -18,7 +18,7 @@ if (!apiBaseUrl) throw new Error('VITE_OMNI_CONNECT_API_BASE_URL is required')
 type Locale = 'ko' | 'en'
 type User = { userId: string; username: string; name: string; phoneNumber: string; role: 'MEMBER' | 'ADMIN' }
 type Session = { accessToken: string; expiresAt: string; passwordChangeRequired: boolean; user: User }
-type Application = { applicationId: string; partnerId: string; status: string; requestedAt: string; apiKeySha256Prefix?: string; apiKey?: string; rejectionReason?: string }
+type Application = { applicationId: string; partnerId: string; applicantUsername: string; applicantName: string; status: string; requestedAt: string; apiKeySha256Prefix?: string; apiKey?: string; rejectionReason?: string }
 type TermStat = { normalizedTerm: string; locale: string; clickCount: number; cacheHitCount: number; lastClickedAt: string }
 type TermPoint = { periodStart: string; clickCount: number }
 type TermAnalytics = { period: 'DAY' | 'MONTH' | 'YEAR' | 'ALL'; points: TermPoint[]; terms: TermStat[] }
@@ -749,8 +749,9 @@ function MemberPortal({ session, activeTab, onNavigate, onSignIn, onHome, onAdmi
   if (!session) return <AccessGate title="파트너 포털 로그인이 필요합니다" onSignIn={onSignIn} onHome={onHome}/>
   const requestKey = async () => { try { await api('/api/v1/portal/api-key-applications', { method: 'POST' }, session.accessToken); await refresh(); setMessage('API 키 신청이 접수되었습니다.') } catch (error) { setMessage(error instanceof Error ? error.message : '요청 실패') } }
   const action = async (id: string, name: 'cancel' | 'reissue' | 'revoke') => { try { await api(`/api/v1/portal/api-key-applications/${id}/${name}`, { method: 'POST' }, session.accessToken); await refresh(); setMessage(name === 'cancel' ? '신청을 취소했습니다.' : name === 'reissue' ? '재발급 신청을 접수했습니다.' : '폐기 신청을 접수했습니다.') } catch (error) { setMessage(error instanceof Error ? error.message : '요청 처리에 실패했습니다.') } }
+  const revealKey = (id: string, currentPassword: string) => api<Application>(`/api/v1/portal/api-key-applications/${id}/reveal`, { method: 'POST', body: JSON.stringify({ currentPassword }) }, session.accessToken)
   const navItems: ConsoleNavItem<MemberTab>[] = [{ id: 'dashboard', label: '대시보드' }, { id: 'api-keys', label: 'API 키 관리' }]
-  return <ConsoleShell title="파트너 포털" user={session.user} navItems={navItems} activeNav={activeTab} onNavigate={onNavigate} onHome={onHome} onPassword={onPassword} onSignOut={onSignOut} adminAction={session.user.role === 'ADMIN' ? onAdmin : undefined}>{activeTab === 'dashboard' ? <><div className="console-hero"><div><p className="eyebrow">PARTNER WORKSPACE</p><h2>{session.user.name}님, 반갑습니다.</h2><p>발급된 API 키와 신청 상태를 안전하게 관리하세요.</p></div><button className="primary" onClick={() => onNavigate('api-keys')}>API 키 관리 →</button></div>{message && <p className="notice">{message}</p>}<div className="admin-summary member-summary"><Summary label="전체 신청" value={applications.length}/><Summary label="승인된 API 키" value={applications.filter((item) => item.status === 'APPROVED').length}/></div></> : <section className="admin-panel tab-panel"><div className="panel-title"><div><p className="eyebrow">API KEY MANAGEMENT</p><h1>API 키 관리</h1><p>신청 상태와 발급된 키를 확인합니다.</p></div><button className="primary" onClick={requestKey}>API 키 신청</button></div>{message && <p className="notice">{message}</p>}<ApplicationTable applications={applications} onAction={action}/></section>}</ConsoleShell>
+  return <ConsoleShell title="파트너 포털" user={session.user} navItems={navItems} activeNav={activeTab} onNavigate={onNavigate} onHome={onHome} onPassword={onPassword} onSignOut={onSignOut} adminAction={session.user.role === 'ADMIN' ? onAdmin : undefined}>{activeTab === 'dashboard' ? <><div className="console-hero"><div><p className="eyebrow">PARTNER WORKSPACE</p><h2>{session.user.name}님, 반갑습니다.</h2><p>발급된 API 키와 신청 상태를 안전하게 관리하세요.</p></div><button className="primary" onClick={() => onNavigate('api-keys')}>API 키 관리 →</button></div>{message && <p className="notice">{message}</p>}<div className="admin-summary member-summary"><Summary label="전체 신청" value={applications.length}/><Summary label="승인된 API 키" value={applications.filter((item) => item.status === 'APPROVED').length}/></div></> : <section className="admin-panel tab-panel"><div className="panel-title"><div><p className="eyebrow">API KEY MANAGEMENT</p><h1>API 키 관리</h1><p>신청 상태와 발급된 키를 확인합니다.</p></div><button className="primary" onClick={requestKey}>API 키 신청</button></div>{message && <p className="notice">{message}</p>}<ApplicationTable applications={applications} onAction={action} onReveal={revealKey}/></section>}</ConsoleShell>
 }
 
 function AdminPage({ session, activeTab, onNavigate, onSignIn, onHome, onPassword, onSignOut }: { session: Session | null; activeTab: AdminTab; onNavigate: (tab: AdminTab) => void; onSignIn: () => void; onHome: () => void; onPassword: () => void; onSignOut: () => void }) {
@@ -780,9 +781,53 @@ function AdminPage({ session, activeTab, onNavigate, onSignIn, onHome, onPasswor
 function ConsoleShell<T extends string>({ title, user, navItems, activeNav, onNavigate, onHome, onPassword, onSignOut, adminAction, children }: { title: string; user: User; navItems: ConsoleNavItem<T>[]; activeNav: T | 'password'; onNavigate: (tab: T) => void; onHome: () => void; onPassword: () => void; onSignOut: () => void; adminAction?: () => void; children: React.ReactNode }) { return <div className="console-shell"><aside className="console-sidebar"><Wordmark onClick={onHome}/><p>{title}</p><nav aria-label="콘솔 메뉴">{navItems.map((item) => <button key={item.id} className={activeNav === item.id ? 'active' : ''} aria-current={activeNav === item.id ? 'page' : undefined} onClick={() => onNavigate(item.id)}>{item.label}</button>)}<button className={activeNav === 'password' ? 'active' : ''} aria-current={activeNav === 'password' ? 'page' : undefined} onClick={onPassword}>비밀번호 변경</button>{adminAction && <button onClick={adminAction}>관리자 백오피스 →</button>}</nav><div className="sidebar-user"><b>{user.name}</b><span>{user.role}</span><button onClick={onSignOut}>로그아웃</button></div></aside><main className="console-main">{children}</main></div> }
 function AccessGate({ title, body, onSignIn, onHome }: { title: string; body?: string; onSignIn: () => void; onHome: () => void }) { return <div className="access-gate"><Wordmark onClick={onHome}/><h1>{title}</h1><p>{body ?? '파트너 계정으로 로그인해 주세요.'}</p><div><button className="secondary" onClick={onHome}>홈으로</button><button className="primary" onClick={onSignIn}>로그인</button></div></div> }
 function Summary({ label, value }: { label: string; value: number }) { return <article><span>{label}</span><b>{value.toLocaleString()}</b><i>실시간</i></article> }
-function ApplicationTable({ applications, admin, onAction, onAdminAction }: { applications: Application[]; admin?: boolean; onAction?: (id: string, action: 'cancel' | 'reissue' | 'revoke') => void; onAdminAction?: (id: string, action: 'approve' | 'reject' | 'reissue' | 'revoke') => void }) {
-  const activeKey = useMemo(() => applications.find((item) => ['APPROVED', 'REISSUE_REQUESTED', 'REVOCATION_REQUESTED'].includes(item.status) && item.apiKey), [applications])
-  return <div className="data-table">{activeKey && <div className="key-callout"><span>발급된 서버 API 키</span><code>{activeKey.apiKey}</code><small>브라우저나 모바일 앱에 노출하지 말고 서버 설정에만 보관하세요.</small></div>}<div className="table-head"><span>파트너</span><span>상태</span><span>신청일</span><span>처리</span></div>{applications.length === 0 ? <p className="empty">신청 내역이 없습니다.</p> : applications.map((item) => <div className="table-row" key={item.applicationId}><span>{item.partnerId}{item.rejectionReason && <small>{item.rejectionReason}</small>}</span><b className={`status ${item.status.toLowerCase()}`}>{item.status}</b><span>{new Date(item.requestedAt).toLocaleDateString('ko-KR')}</span><div className="row-actions">{admin ? <>{['PENDING', 'REISSUE_REQUESTED', 'REVOCATION_REQUESTED'].includes(item.status) && <><button onClick={() => onAdminAction?.(item.applicationId, 'approve')}>승인</button><button className="danger" onClick={() => onAdminAction?.(item.applicationId, 'reject')}>반려</button></>}{item.status === 'APPROVED' && <><button onClick={() => onAdminAction?.(item.applicationId, 'reissue')}>재발급</button><button className="danger" onClick={() => onAdminAction?.(item.applicationId, 'revoke')}>폐기</button></>}</> : <>{['PENDING', 'REISSUE_REQUESTED', 'REVOCATION_REQUESTED'].includes(item.status) && <button onClick={() => onAction?.(item.applicationId, 'cancel')}>신청 취소</button>}{item.status === 'APPROVED' && <><button onClick={() => onAction?.(item.applicationId, 'reissue')}>재발급 신청</button><button className="danger" onClick={() => onAction?.(item.applicationId, 'revoke')}>폐기 신청</button></>}</>}</div></div>)}</div>
+function ApplicationTable({ applications, admin, onAction, onAdminAction, onReveal }: { applications: Application[]; admin?: boolean; onAction?: (id: string, action: 'cancel' | 'reissue' | 'revoke') => void; onAdminAction?: (id: string, action: 'approve' | 'reject' | 'reissue' | 'revoke') => void; onReveal?: (id: string, currentPassword: string) => Promise<Application> }) {
+  const [openedApplicationId, setOpenedApplicationId] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [revealedKeys, setRevealedKeys] = useState<Record<string, string>>({})
+  const [revealMessage, setRevealMessage] = useState('')
+  const [revealing, setRevealing] = useState(false)
+  const readableStatuses = ['APPROVED', 'REISSUE_REQUESTED', 'REVOCATION_REQUESTED']
+  const openReveal = (applicationId: string) => {
+    setOpenedApplicationId(applicationId)
+    setCurrentPassword('')
+    setRevealMessage('')
+  }
+  const hideKey = (applicationId: string) => {
+    setRevealedKeys((keys) => { const next = { ...keys }; delete next[applicationId]; return next })
+    setOpenedApplicationId('')
+    setCurrentPassword('')
+    setRevealMessage('')
+  }
+  const submitReveal = async (event: FormEvent<HTMLFormElement>, applicationId: string) => {
+    event.preventDefault()
+    if (!onReveal) return
+    setRevealing(true)
+    setRevealMessage('')
+    try {
+      const application = await onReveal(applicationId, currentPassword)
+      if (!application.apiKey) throw new Error('발급된 API 키를 불러오지 못했습니다.')
+      setRevealedKeys((keys) => ({ ...keys, [applicationId]: application.apiKey! }))
+      setCurrentPassword('')
+    } catch (error) {
+      setRevealMessage(error instanceof Error ? error.message : 'API 키를 확인하지 못했습니다.')
+    } finally {
+      setRevealing(false)
+    }
+  }
+  const copyKey = async (applicationId: string) => {
+    try {
+      await navigator.clipboard.writeText(revealedKeys[applicationId])
+      setRevealMessage('API 키를 복사했습니다.')
+    } catch {
+      setRevealMessage('복사하지 못했습니다. 키를 직접 선택해 복사해 주세요.')
+    }
+  }
+  return <div className="data-table"><div className="table-head"><span>{admin ? '신청자' : '파트너 ID'}</span><span>상태</span><span>신청일</span><span>처리</span></div>{applications.length === 0 ? <p className="empty">신청 내역이 없습니다.</p> : applications.map((item) => {
+    const revealedKey = revealedKeys[item.applicationId]
+    const opened = openedApplicationId === item.applicationId
+    return <div className="table-row" key={item.applicationId}><span className={admin ? 'applicant' : undefined}>{admin ? <><b>{item.applicantName}</b><small>{item.applicantUsername}</small><small>파트너 ID · {item.partnerId}</small></> : <>{item.partnerId}{item.apiKeySha256Prefix && <small>키 식별자 · {item.apiKeySha256Prefix}</small>}</>}{item.rejectionReason && <small>반려 사유 · {item.rejectionReason}</small>}</span><b className={`status ${item.status.toLowerCase()}`}>{item.status}</b><span>{new Date(item.requestedAt).toLocaleDateString('ko-KR')}</span><div className="row-actions">{admin ? <>{['PENDING', 'REISSUE_REQUESTED', 'REVOCATION_REQUESTED'].includes(item.status) && <><button onClick={() => onAdminAction?.(item.applicationId, 'approve')}>승인</button><button className="danger" onClick={() => onAdminAction?.(item.applicationId, 'reject')}>반려</button></>}{item.status === 'APPROVED' && <><button onClick={() => onAdminAction?.(item.applicationId, 'reissue')}>재발급</button><button className="danger" onClick={() => onAdminAction?.(item.applicationId, 'revoke')}>폐기</button></>}</> : <>{readableStatuses.includes(item.status) && <button onClick={() => revealedKey ? hideKey(item.applicationId) : openReveal(item.applicationId)}>{revealedKey ? 'API 키 숨기기' : 'API 키 확인'}</button>}{['PENDING', 'REISSUE_REQUESTED', 'REVOCATION_REQUESTED'].includes(item.status) && <button onClick={() => onAction?.(item.applicationId, 'cancel')}>신청 취소</button>}{item.status === 'APPROVED' && <><button onClick={() => onAction?.(item.applicationId, 'reissue')}>재발급 신청</button><button className="danger" onClick={() => onAction?.(item.applicationId, 'revoke')}>폐기 신청</button></>}</>}</div>{!admin && opened && <div className="api-key-reveal">{revealedKey ? <><div><span>발급된 서버 API 키</span><code>{revealedKey}</code><small>현재 비밀번호를 확인하면 횟수 제한 없이 다시 볼 수 있습니다. 브라우저·모바일 앱에는 저장하지 마세요.</small></div><div className="reveal-actions"><button type="button" onClick={() => void copyKey(item.applicationId)}>복사</button><button type="button" onClick={() => hideKey(item.applicationId)}>숨기기</button></div></> : <form onSubmit={(event) => void submitReveal(event, item.applicationId)}><label>현재 비밀번호<input type="password" value={currentPassword} minLength={1} maxLength={128} autoComplete="current-password" onChange={(event) => setCurrentPassword(event.target.value)} required/></label><div className="reveal-actions"><button type="button" onClick={() => hideKey(item.applicationId)}>취소</button><button className="primary" disabled={revealing}>{revealing ? '확인 중...' : 'API 키 보기'}</button></div></form>}{revealMessage && <p className="reveal-message" role="status">{revealMessage}</p>}</div>}</div>
+  })}</div>
 }
 function TaxAdmin({ cases, token, onChanged }: { cases: TaxCase[]; token: string; onChanged: () => Promise<void> }) {
   const [selected, setSelected] = useState<TaxCase | null>(null); const [fields, setFields] = useState<Record<string, string>>({}); const [message, setMessage] = useState('')
