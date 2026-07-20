@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
+import { ProductStory } from './product-story'
 import {
   AdminTab,
   AppLocation,
@@ -418,49 +419,6 @@ function Ticker() {
   const group = (hidden = false) => <div className="ticker-group" aria-hidden={hidden || undefined}>{items.map((item) => <span key={item}>{item}<b>·</b></span>)}</div>
   return <div className="ticker" aria-label={items.join(', ')}><div className="ticker-track">{group()}{group(true)}</div></div>
 }
-function Showcase({ image, tag, title }: { image: string; tag: string; title: string }) { return <article className="showcase-card"><div className="screen-wrap"><img src={image} alt={title}/><div className="screen-shine"/></div><span>{tag}</span><h3>{title}</h3></article> }
-
-function ProductStory({ locale, title, intro }: { locale: Locale; title: string; intro: string }) {
-  const [active, setActive] = useState(0)
-  const [activeSlide, setActiveSlide] = useState(0)
-  useEffect(() => { const elements = [...document.querySelectorAll<HTMLElement>('[data-story-step]')]; const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.storyStep)) }), { rootMargin: '-38% 0px -38% 0px' }); elements.forEach((element) => observer.observe(element)); return () => observer.disconnect() }, [])
-  useEffect(() => setActiveSlide(0), [active])
-  const stories = locale === 'ko' ? [
-    { tag: '핵심 기능 01', title: '한국 증시 인텔리전스', body: '새로운 뉴스·공시 발생 시 파이프라인을 통해 WebSocket 알림과 REST를 제공합니다.', detail: '해외 MTS 사용자의 보유·관심 종목 정보를 실시간으로 연결합니다.', points: ['보유·관심 종목 실시간 알림', '금융 특화 NLP 감성·중요도 분류', '로컬 LLM 번역과 What·Why·Impact 분석', 'RAG 고유어 해설과 글로벌 기업 매칭'], slides: [
-      { image: '/showcase/omni-connect/core-01-alerts.png', alt: '관심 종목 등록과 실시간 알림 화면' },
-      { image: '/showcase/omni-connect/core-01-classification.png', alt: '뉴스 호재·악재와 중요도 분류 화면' },
-      { image: '/showcase/omni-connect/core-01-explanation.png', alt: '한국 증시 고유어 해설과 AI 분석 요약 화면' },
-      { image: '/showcase/omni-connect/core-01-global-peers.png', alt: '글로벌 기업 매칭 AI 화면' },
-    ] },
-    { tag: '핵심 기능 02', title: '거래 제한 종목 스크리너', body: '시계열 ML 예측 모델로 외국인 보유 제한 32개 종목의 장중 외국인 지분율 예측치를 제공합니다.', detail: 'WebSocket 실시간 환율 적용 시세와 체결 제한 종목 정보를 필터링해 제공합니다.', points: ['금일 외국인 지분율 예측 경계', '실시간 환율 적용 가격', 'VI 가격 급등락과 상·하한가 도달 안내'], slides: [
-      { image: '/showcase/omni-connect/core-02-ownership.png', alt: '외국인 지분율 예측 경계 화면' },
-      { image: '/showcase/omni-connect/core-02-restrictions.png', alt: 'VI와 상하한가 거래 제한 안내 화면' },
-    ] },
-    { tag: '핵심 기능 03', title: '글로벌 세무 처리 자동화', body: '수작업 기반 세무 처리 절차를 디지털화해 모바일 절세 신청을 지원합니다.', detail: 'OCR로 제출 서류 정보를 추출하고 누락·오기입과 문서 간 일치 여부를 검증합니다.', points: ['개인정보 활용 동의와 거주자 증명서 업로드', '아포스티유·제한세율신청서 업로드', '서명·납세번호·국적·주소 등 서류 교차 검증'], slides: [
-      { image: '/showcase/omni-connect/core-03-intake.png', alt: '세무 신청과 거주자 증명서 업로드 화면' },
-      { image: '/showcase/omni-connect/core-03-validation.png', alt: '아포스티유와 제한세율신청서 교차 검증 화면' },
-    ] },
-  ] : [
-    { tag: 'CORE 01', title: 'Korean market intelligence', body: 'New news and disclosures are delivered through the pipeline over WebSocket alerts and REST.', detail: 'Portfolio and watchlist intelligence reaches overseas MTS users in real time.', points: ['Live portfolio and watchlist alerts', 'Financial sentiment and materiality classification', 'Local-LLM translation and What·Why·Impact analysis', 'RAG terminology guidance and global-company matching'], slides: [
-      { image: '/showcase/omni-connect/core-01-alerts.png', alt: 'Watchlist registration and live notification screens' },
-      { image: '/showcase/omni-connect/core-01-classification.png', alt: 'News sentiment and priority classification screens' },
-      { image: '/showcase/omni-connect/core-01-explanation.png', alt: 'Korean market terminology and AI analysis screens' },
-      { image: '/showcase/omni-connect/core-01-global-peers.png', alt: 'Global company matching screens' },
-    ] },
-    { tag: 'CORE 02', title: 'Restricted-stock screener', body: 'A time-series ML model estimates intraday foreign ownership for 32 foreign-limit stocks.', detail: 'WebSocket FX-adjusted quotes and restricted-stock signals are filtered for partner services.', points: ['Next-day foreign-ownership boundaries', 'Live FX-adjusted prices', 'VI and daily price-limit guidance'], slides: [
-      { image: '/showcase/omni-connect/core-02-ownership.png', alt: 'Foreign-ownership forecast boundary screens' },
-      { image: '/showcase/omni-connect/core-02-restrictions.png', alt: 'VI and daily price-limit guidance screens' },
-    ] },
-    { tag: 'CORE 03', title: 'Global tax automation', body: 'Manual tax-processing procedures are digitized into a mobile tax-benefit application.', detail: 'OCR extracts submitted documents and validates omissions, incorrect entries, and cross-document consistency.', points: ['Consent and certificate-of-residence upload', 'Apostille and reduced-rate application upload', 'Cross-checks for signatures, tax IDs, nationality, and address'], slides: [
-      { image: '/showcase/omni-connect/core-03-intake.png', alt: 'Tax application and certificate upload screens' },
-      { image: '/showcase/omni-connect/core-03-validation.png', alt: 'Apostille and reduced-rate application validation screens' },
-    ] },
-  ]
-  const currentStory = stories[active]
-  const currentSlide = currentStory.slides[activeSlide] ?? currentStory.slides[0]
-  return <section id="use-cases" className="product-story"><div className="story-heading"><p className="eyebrow">LIVE IMPLEMENTATION</p><h2>{title}</h2><p>{intro}</p></div><div className="story-layout"><div className="story-copy">{stories.map((story, index) => <article key={story.tag} data-story-step={index} className={active === index ? 'active' : ''}><span>{story.tag}</span><h3>{story.title}</h3><p>{story.body}</p><ul>{story.points.map((point) => <li key={point}>{point}</li>)}</ul><small>{story.detail}</small><div className="story-mobile-gallery">{story.slides.map((slide) => <a href={slide.image} target="_blank" rel="noreferrer" key={slide.image}><img src={slide.image} alt={slide.alt}/></a>)}</div></article>)}</div><div className="story-stage"><figure className="story-board"><a href={currentSlide.image} target="_blank" rel="noreferrer" aria-label={locale === 'ko' ? '피그마 원본 화면 크게 보기' : 'Open the Figma reference screen'}><img src={currentSlide.image} alt={currentSlide.alt}/></a><figcaption><div><b>{currentStory.tag}</b><span>{currentStory.title}</span></div><div className="story-slide-controls"><button type="button" aria-label={locale === 'ko' ? '이전 화면' : 'Previous screen'} onClick={() => setActiveSlide((activeSlide - 1 + currentStory.slides.length) % currentStory.slides.length)}>←</button><span>{activeSlide + 1} / {currentStory.slides.length}</span><button type="button" aria-label={locale === 'ko' ? '다음 화면' : 'Next screen'} onClick={() => setActiveSlide((activeSlide + 1) % currentStory.slides.length)}>→</button></div></figcaption></figure><div className="story-progress">{stories.map((story, index) => <button type="button" aria-label={story.title} onClick={() => setActive(index)} className={active === index ? 'active' : ''} key={story.tag}/>)}</div></div></div></section>
-}
-
 function ModelPerformance({ locale }: { locale: Locale }) {
   type Metric = { label: string; value: number; display: string; scale?: number }
   type Benchmark = { name: string; mape: number; mae: string; rmse: string; hana?: boolean }
