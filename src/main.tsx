@@ -4,10 +4,7 @@ import './styles.css'
 import { ProductStory } from './product-story'
 import {
   HANA_MONTANA_AI_DISPLAY_NAME,
-  metricFillPercent,
-  MODEL_CATALOG,
   MODEL_OVERVIEW,
-  MODEL_SOURCE_LABELS,
 } from './modelCatalog'
 import {
   AdminTab,
@@ -415,7 +412,7 @@ function Home({ locale, onLocale, navigate, session, onSignOut }: { locale: Loca
     <section id="capabilities" className="section"><p className="eyebrow">API CAPABILITIES</p><div className="section-head"><h2>{t.capabilities}</h2><p>{t.capabilityIntro}</p></div><div className="capability-grid"><Capability number="01" title={locale === 'ko' ? '실시간 시장 데이터' : 'Live market data'} body={locale === 'ko' ? '시세, 지수, 호가와 매매 제한을 일관된 계약으로 제공합니다.' : 'Quotes, indices, order books, and trading restrictions through one contract.'}/><Capability number="02" title={locale === 'ko' ? '뉴스·공시 인텔리전스' : 'News & disclosures'} body={locale === 'ko' ? '번역 전문, 감성, 중요도와 AI 분석을 함께 제공합니다.' : 'Translated full text, sentiment, materiality, and AI analysis.'}/><Capability number="03" title={locale === 'ko' ? '글로벌 세무 OCR' : 'Global tax OCR'} body={locale === 'ko' ? '3종 세무 서류의 OCR·위변조 위험·필수값을 검증합니다.' : 'OCR and risk validation for three essential tax documents.'}/><Capability number="04" title={locale === 'ko' ? '고유어·실시간 알림' : 'Terms & live alerts'} body={locale === 'ko' ? '문맥 설명과 보유·관심종목 이벤트를 실시간 전달합니다.' : 'Contextual term guidance and portfolio-aware real-time alerts.'}/></div></section>
     <ProductStory locale={locale} title={t.cases} intro={t.casesIntro}/>
     <section id="ai-model" className="ai-section"><div className="ai-logo-wrap"><div className="ai-glow"/><img className="logo-on-light" src="/brand/hana-montana.png" alt={HANA_MONTANA_AI_DISPLAY_NAME}/></div><div><p className="eyebrow">FINANCIAL AI MODEL</p><h2>{t.aiTitle}</h2><p>{t.aiBody}</p><div className="model-pills">{MODEL_OVERVIEW.pills.map((pill) => <span key={pill}>{pill}</span>)}</div></div></section>
-    <ModelCatalogPerformance locale={locale}/>
+    <ModelPerformance locale={locale}/>
     <section className="cta"><Wordmark onClick={() => navigate('home')} inverse/><div><p className="eyebrow">BUILD WITH HANA</p><h2>{locale === 'ko' ? '한국 금융 인텔리전스를 서비스에 연결하세요.' : 'Connect Korean financial intelligence to your product.'}</h2></div><button className="primary light" onClick={() => navigate('auth')}>{t.start} →</button></section>
   </main><Footer locale={locale}/></div>
 }
@@ -448,12 +445,12 @@ function ModelPerformance({ locale }: { locale: Locale }) {
   const comparisons: ComparisonGroup[] = locale === 'ko' ? [
     {
       title: '대상 종목 금융 감성분류',
-      subtitle: 'Macro-F1 · 동일 개발셋 · seed 17',
-      status: '신규 v6 확증 Test 결과 대기',
-      baselineName: 'KR-FinBERT-SC',
+      subtitle: '가중 Macro-F1 · 잠금 후 확증 Test · seed 42',
+      status: '확증 완료 · 후보 미승격',
+      baselineName: '원본 금융 특화 기준모델',
       rows: [
-        { scope: '국내 뉴스', hana: 0.6183, baseline: 0.5707, improvement: '+8.34% (+0.0476)' },
-        { scope: '국내 공시', hana: 0.9252, baseline: 0.9135, improvement: '+1.27% (+0.0117)' },
+        { scope: '국내 뉴스', hana: 0.5530, baseline: 0.4937, improvement: '+12.02% (+5.94점)' },
+        { scope: '국내 공시', hana: 0.6024, baseline: 0.6146, improvement: '-2.00% (-1.23점)' },
       ],
     },
     {
@@ -469,12 +466,12 @@ function ModelPerformance({ locale }: { locale: Locale }) {
   ] : [
     {
       title: 'Target-aware financial sentiment',
-      subtitle: 'Macro-F1 · same development set · seed 17',
-      status: 'New v6 confirmatory Test pending',
-      baselineName: 'KR-FinBERT-SC',
+      subtitle: 'Weighted Macro-F1 · post-lock confirmatory Test · seed 42',
+      status: 'Confirmatory complete · candidate not promoted',
+      baselineName: 'Raw finance-specialized reference',
       rows: [
-        { scope: 'Korean news', hana: 0.6183, baseline: 0.5707, improvement: '+8.34% (+0.0476)' },
-        { scope: 'Korean disclosures', hana: 0.9252, baseline: 0.9135, improvement: '+1.27% (+0.0117)' },
+        { scope: 'Korean news', hana: 0.5530, baseline: 0.4937, improvement: '+12.02% (+5.94 pts)' },
+        { scope: 'Korean disclosures', hana: 0.6024, baseline: 0.6146, improvement: '-2.00% (-1.23 pts)' },
       ],
     },
     {
@@ -512,63 +509,8 @@ function ModelPerformance({ locale }: { locale: Locale }) {
       <div className="research-copy"><p className="eyebrow">K-FNSPID V4 RESEARCH</p><h3>{locale === 'ko' ? '시간 누수를 통제한 한국 금융 데이터셋' : 'A leakage-controlled Korean financial dataset'}</h3><p>{locale === 'ko' ? '뉴스와 공시를 대상 종목·한국 거래일·일별 시세에 연결합니다. 감성은 특정 종목에 대한 방향을, 시장영향 중요도는 발표 뒤 관측된 가격반응 등급을 예측하며 의미 중요도와 투자 신호를 대신하지 않습니다.' : 'News and disclosures are linked to target securities, Korean trading days, and daily prices. Sentiment models direction toward a named security; market-impact importance predicts an observed post-publication reaction class and does not replace semantic materiality or investment judgment.'}</p><dl><div><dt>1,247,685</dt><dd>{locale === 'ko' ? '뉴스·공시 문서' : 'news and disclosure documents'}</dd></div><div><dt>1,136,118</dt><dd>{locale === 'ko' ? '문서–종목 관계' : 'document-security relations'}</dd></div><div><dt>10,691,998</dt><dd>{locale === 'ko' ? '파일 기반 일별 시세 행' : 'file-based daily-price rows'}</dd></div></dl></div>
       <figure className="paper-figure"><img src="/research/k-fnspid/paper-overview.png" alt={locale === 'ko' ? 'K-FNSPID 논문 제목과 초록 일부' : 'Excerpt from the K-FNSPID paper title and abstract'}/><img src="/research/k-fnspid/paper-results.png" alt={locale === 'ko' ? 'K-FNSPID 논문의 감성 및 시장영향 실험 결과 일부' : 'Excerpt from the K-FNSPID sentiment and market-impact results'}/><figcaption>{locale === 'ko' ? 'K-FNSPID 한국어 논문 원고 일부 · 최성현' : 'Excerpts from the Korean K-FNSPID manuscript · Sunghyun Choi'}</figcaption></figure>
     </article>
-    <div className="comparison-grid">{comparisons.map((group) => <article className="comparison-card" key={group.title}><header><div><h3>{group.title}</h3><p>{group.subtitle}</p></div><span>{group.status}</span></header><div className="comparison-rows">{group.rows.map((row) => <div className="comparison-item" key={row.scope}><div className="comparison-item-head"><strong>{row.scope}</strong><b>{row.improvement}</b></div><div className="comparison-result hana"><span>{hanaLabel}</span><div><em><i style={{ width: `${row.hana * 100}%` }}/></em><b>{row.hana.toFixed(4)}</b></div></div><div className="comparison-result baseline"><span>{group.baselineName}</span><div><em><i style={{ width: `${row.baseline * 100}%` }}/></em><b>{row.baseline.toFixed(4)}</b></div></div></div>)}</div><p className="comparison-note">{locale === 'ko' ? (group.title.startsWith('대상') ? '개발셋 진단값이며 신규 v6의 확증 성능이나 SOTA 주장이 아닙니다.' : '동일 K-FNSPID 시간 Test 비교입니다. 공시는 신뢰구간과 QWK 때문에 우위를 확정하지 않습니다.') : (group.title.startsWith('Target') ? 'Development-set diagnostics only; these are not confirmatory v6 or SOTA claims.' : 'Same K-FNSPID temporal Test. Disclosure superiority remains unconfirmed due to its confidence interval and QWK.')}</p></article>)}</div>
+    <div className="comparison-grid">{comparisons.map((group) => <article className="comparison-card" key={group.title}><header><div><h3>{group.title}</h3><p>{group.subtitle}</p></div><span>{group.status}</span></header><div className="comparison-rows">{group.rows.map((row) => <div className="comparison-item" key={row.scope}><div className="comparison-item-head"><strong>{row.scope}</strong><b>{row.improvement}</b></div><div className="comparison-result hana"><span>{hanaLabel}</span><div><em><i style={{ width: `${row.hana * 100}%` }}/></em><b>{row.hana.toFixed(4)}</b></div></div><div className="comparison-result baseline"><span>{group.baselineName}</span><div><em><i style={{ width: `${row.baseline * 100}%` }}/></em><b>{row.baseline.toFixed(4)}</b></div></div></div>)}</div><p className="comparison-note">{locale === 'ko' ? (group.title.startsWith('대상') ? '잠금 후 NEWS·DISCLOSURE 각 600건을 1회 평가한 결과입니다. 두 출처를 함께 개선하지 못해 후보는 미승격입니다.' : '동일 K-FNSPID 시간 Test 비교입니다. 공시는 신뢰구간과 QWK 때문에 우위를 확정하지 않습니다.') : (group.title.startsWith('Target') ? 'Each source was evaluated once on 600 post-lock samples. The candidate was not promoted because it did not improve both sources.' : 'Same K-FNSPID temporal Test. Disclosure superiority remains unconfirmed due to its confidence interval and QWK.')}</p></article>)}</div>
     <div className="feature-grid">{(features as Feature[]).map((feature) => <article className={`feature-card${feature.benchmarks ? ' benchmark-card' : ''}`} key={feature.title}><h3>{feature.title}</h3><div className="model-name"><span>AI MODEL</span><strong>{feature.model}</strong></div><p>{feature.description}</p>{feature.metrics && <div className="metric-chart">{feature.metrics.map((metric) => <div className="metric-item" key={metric.label}><div><span>{metric.label}</span><b>{metric.display}</b></div><div className="metric-track" aria-label={`${metric.label} ${metric.display}`}><i style={{ width: `${Math.min(100, metric.value / (metric.scale ?? 100) * 100)}%` }}/></div></div>)}</div>}{feature.benchmarks && <div className="benchmark"><div className="benchmark-head"><div><b>{locale === 'ko' ? '동일 평가 범위 SOTA 계열 비교' : 'Same-scope SOTA-family comparison'}</b><span>{locale === 'ko' ? 'MAPE · 낮을수록 우수' : 'MAPE · lower is better'}</span></div><div className="benchmark-columns"><span>MAE</span><span>RMSE</span></div></div>{feature.benchmarks.map((item) => <div className={`benchmark-row${item.hana ? ' hana' : ''}`} key={item.name}><div className="benchmark-label"><strong>{item.name}</strong>{item.hana && <b>{locale === 'ko' ? '기준 모델' : 'Reference model'}</b>}</div><div className="benchmark-track" aria-label={`${item.name} MAPE comparison`}><i style={{ width: `${item.mape / 5.2 * 100}%` }}/></div><div className="benchmark-values"><span>{item.mae}</span><span>{item.rmse}</span></div></div>)}<p>{locale === 'ko' ? `Hana Montana은 MAPE 기준 비교 모델 대비 ${foreignOwnershipImprovement} 개선됐습니다. 외국인 보유 제한 32개 종목 중 0% 한도 3종목은 규칙 처리하며, ML 대상 29종목·동일 21,895개 walk-forward 표본으로 N-HiTS/PatchTST를 비교했습니다 (max_steps=20).` : `Hana Montana improves MAPE by ${foreignOwnershipImprovement} versus the compared models. Three zero-limit stocks are handled by rules; N-HiTS and PatchTST use the same 21,895 walk-forward samples across 29 ML-eligible stocks (max_steps=20).`}</p></div>}</article>)}</div>
-  </section>
-}
-
-function ModelCatalogPerformance({ locale }: { locale: Locale }) {
-  return <section className="performance-section" aria-labelledby="model-catalog-title">
-    <div className="performance-head">
-      <p className="eyebrow">HANA MONTANA AI</p>
-      <h2 id="model-catalog-title">{HANA_MONTANA_AI_DISPLAY_NAME}</h2>
-      <p>{locale === 'ko' ? '출처별 모델 계약과 현재 검증 상태를 구분해 표시합니다.' : 'Source-specific model contracts and current evidence states are shown separately.'}</p>
-    </div>
-    <div className="feature-grid">
-      {MODEL_CATALOG.map((feature) => {
-        const source = MODEL_SOURCE_LABELS[feature.source][locale]
-        const evidenceLabel = feature.evidence.label[locale]
-        return <article
-          className={`feature-card${feature.metrics ? ' metric-card' : ''}`}
-          data-model-id={feature.id}
-          data-source={feature.source}
-          data-task={feature.task}
-          key={feature.id}
-        >
-          <div className="feature-card-heading">
-            <h3>{feature.title[locale]}</h3>
-            <span className="source-chip">{locale === 'ko' ? '출처' : 'Source'} · {source}</span>
-          </div>
-          <div className="model-name">
-            <span>{locale === 'ko' ? '공식 모델명' : 'OFFICIAL MODEL NAME'}</span>
-            <strong>{feature.productName}</strong>
-            <small>{feature.implementation}</small>
-          </div>
-          <p>{feature.description[locale]}</p>
-          <div
-            className={`evidence-state ${feature.evidence.state === 'LOCKED_RESULT_PENDING' ? 'pending' : 'confirmed'}`}
-            aria-label={evidenceLabel}
-          >
-            <strong>{evidenceLabel}</strong>
-            <p>{feature.evidence.note[locale]}</p>
-          </div>
-          {feature.metrics && <div className="metric-chart" role="list" aria-label={locale === 'ko' ? '확정 데이터 규모' : 'Confirmed dataset scale'}>
-            {feature.metrics.map((metric) => <div className="metric-item" role="listitem" key={metric.id}>
-              <div><span>{metric.label[locale]}</span><b>{metric.display[locale]}</b></div>
-              <div
-                className="metric-track"
-                role="meter"
-                aria-label={metric.label[locale]}
-                aria-valuemin={0}
-                aria-valuemax={metric.scale}
-                aria-valuenow={metric.value}
-                aria-valuetext={metric.display[locale]}
-              ><i aria-hidden="true" style={{ width: `${metricFillPercent(metric)}%` }}/></div>
-            </div>)}
-          </div>}
-        </article>
-      })}
-    </div>
   </section>
 }
 
