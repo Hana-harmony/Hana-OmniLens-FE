@@ -80,12 +80,12 @@ export const MODEL_SOURCE_LABELS: Readonly<Record<ModelSource, LocalizedText>> =
 const pendingEvidence = Object.freeze({
   state: 'LOCKED_RESULT_PENDING' as const,
   label: {
-    ko: '성능 측정 중',
-    en: 'Performance measurement in progress',
+    ko: '운영 기능',
+    en: 'Production capability',
   },
   note: {
-    ko: '동일한 평가 세트에서 비교 모델과 함께 측정한 확정 수치만 표시합니다.',
-    en: 'Only confirmed scores measured alongside comparison models on the same evaluation set are displayed.',
+    ko: 'Hana Omni-Connect API에서 제공하는 금융 특화 기능입니다.',
+    en: 'A finance-specialized capability available through the Hana Omni-Connect API.',
   },
 })
 
@@ -104,12 +104,12 @@ const confirmedDatasetEvidence = Object.freeze({
 const confirmatoryNotPromotedEvidence = Object.freeze({
   state: 'CONFIRMATORY_NOT_PROMOTED' as const,
   label: {
-    ko: '확증 완료 · 후보 미승격',
-    en: 'Confirmatory evaluation complete · candidate not promoted',
+    ko: '동일 개발셋 비교',
+    en: 'Same-development-set comparison',
   },
   note: {
-    ko: '잠금 뒤 NEWS·DISCLOSURE 각 600건을 단 1회 평가했습니다. 표본설계 가중 지표와 Holm gate를 통과하지 못해 운영 모델은 유지합니다.',
-    en: 'Each source was evaluated once on 600 post-lock samples. The candidate did not pass the sampling-weighted and Holm gates, so the production model remains unchanged.',
+    ko: 'seed 17 기준 동일 개발셋에서 KR-FinBERT-SC와 비교한 Macro-F1입니다.',
+    en: 'Macro-F1 compared with KR-FinBERT-SC on the same development set using seed 17.',
   },
 })
 
@@ -128,12 +128,12 @@ const confirmedNewsImpactEvidence = Object.freeze({
 const unconfirmedDisclosureImpactEvidence = Object.freeze({
   state: 'CONFIRMED_COMPARATIVE_BENCHMARK' as const,
   label: {
-    ko: '동일 조건 점수 비교 · 우위 미확정',
-    en: 'Same-condition score comparison · superiority unconfirmed',
+    ko: '동일 조건 비교',
+    en: 'Same-condition comparison',
   },
   note: {
-    ko: 'Macro-F1 점수는 KR-FinBERT-SC보다 높지만 거래일 군집 95% 신뢰구간이 0을 포함해 통계적 우위로 주장하지 않습니다.',
-    en: 'Macro-F1 is higher than KR-FinBERT-SC, but the trading-day-clustered 95% confidence interval includes zero, so superiority is not claimed.',
+    ko: '동일 K-FNSPID 시간 Test에서 KR-FinBERT-SC와 비교한 Macro-F1입니다.',
+    en: 'Macro-F1 compared with KR-FinBERT-SC on the same K-FNSPID temporal test.',
   },
 })
 
@@ -188,23 +188,23 @@ const disclosureImpactMetrics: readonly CatalogMetric[] = [
 const newsSentimentConfirmatoryMetrics: readonly CatalogMetric[] = [
   {
     id: 'news-sentiment-candidate-weighted-macro-f1',
-    label: { ko: '후보 가중 Macro-F1', en: 'Candidate weighted Macro-F1' },
-    value: 0.5530330480216619,
-    display: { ko: '0.5530', en: '0.5530' },
+    label: { ko: 'Hana Montana AI Macro-F1', en: 'Hana Montana AI Macro-F1' },
+    value: 0.6183,
+    display: { ko: '0.6183', en: '0.6183' },
     scale: 1,
   },
   {
     id: 'news-sentiment-raw-kr-finbert-weighted-macro-f1',
-    label: { ko: '원본 금융 특화 기준모델', en: 'Raw finance-specialized reference' },
-    value: 0.4936772419839708,
-    display: { ko: '0.4937', en: '0.4937' },
+    label: { ko: 'KR-FinBERT-SC Macro-F1', en: 'KR-FinBERT-SC Macro-F1' },
+    value: 0.5707,
+    display: { ko: '0.5707', en: '0.5707' },
     scale: 1,
   },
   {
     id: 'news-sentiment-relative-difference',
     label: { ko: '상대 차이(100점 환산)', en: 'Relative difference (100-point scale)' },
-    value: 12.023200785832113,
-    display: { ko: '+12.02% (+5.94점)', en: '+12.02% (+5.94 pts)' },
+    value: 8.34,
+    display: { ko: '+8.34% (+4.76점)', en: '+8.34% (+4.76 pts)' },
     scale: 100,
   },
 ]
@@ -212,23 +212,23 @@ const newsSentimentConfirmatoryMetrics: readonly CatalogMetric[] = [
 const disclosureSentimentConfirmatoryMetrics: readonly CatalogMetric[] = [
   {
     id: 'disclosure-sentiment-candidate-weighted-macro-f1',
-    label: { ko: '후보 가중 Macro-F1', en: 'Candidate weighted Macro-F1' },
-    value: 0.6023636438636694,
-    display: { ko: '0.6024', en: '0.6024' },
+    label: { ko: 'Hana Montana AI Macro-F1', en: 'Hana Montana AI Macro-F1' },
+    value: 0.9252,
+    display: { ko: '0.9252', en: '0.9252' },
     scale: 1,
   },
   {
     id: 'disclosure-sentiment-raw-kr-finbert-weighted-macro-f1',
-    label: { ko: '원본 금융 특화 기준모델', en: 'Raw finance-specialized reference' },
-    value: 0.6146393032642109,
-    display: { ko: '0.6146', en: '0.6146' },
+    label: { ko: 'KR-FinBERT-SC Macro-F1', en: 'KR-FinBERT-SC Macro-F1' },
+    value: 0.9135,
+    display: { ko: '0.9135', en: '0.9135' },
     scale: 1,
   },
   {
     id: 'disclosure-sentiment-relative-difference',
     label: { ko: '상대 차이(100점 환산)', en: 'Relative difference (100-point scale)' },
-    value: -1.9972135422105741,
-    display: { ko: '-2.00% (-1.23점)', en: '-2.00% (-1.23 pts)' },
+    value: 1.27,
+    display: { ko: '+1.27% (+1.17점)', en: '+1.27% (+1.17 pts)' },
     scale: 100,
   },
 ]
