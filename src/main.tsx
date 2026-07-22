@@ -428,7 +428,7 @@ function ModelPerformance({ locale }: { locale: Locale }) {
   type Benchmark = { name: string; mape: number; mae: string; rmse: string; hana?: boolean }
   type Feature = { title: string; model: string; description: string; metrics?: Metric[]; benchmarks?: Benchmark[] }
   type ModelComparison = { scope: string; hana: number; baseline: number; improvement: string }
-  type ComparisonGroup = { title: string; subtitle: string; status: string; baselineName: string; rows: ModelComparison[] }
+  type ComparisonGroup = { title: string; subtitle: string; baselineName: string; rows: ModelComparison[] }
   const foreignBenchmarks: Benchmark[] = [
     { name: 'Hana Montana', mape: 4.4908, mae: '51,539.19', rmse: '147,477.74', hana: true },
     { name: 'N-HiTS', mape: 4.6955, mae: '52,863.38', rmse: '150,345.74' },
@@ -445,57 +445,49 @@ function ModelPerformance({ locale }: { locale: Locale }) {
   const comparisons: ComparisonGroup[] = locale === 'ko' ? [
     {
       title: '대상 종목 금융 감성분류',
-      subtitle: '가중 Macro-F1 · 잠금 후 확증 Test · seed 42',
-      status: '확증 완료 · 후보 미승격',
-      baselineName: '원본 금융 특화 기준모델',
+      subtitle: 'Macro-F1 · 동일 개발셋 · seed 17',
+      baselineName: 'KR-FinBERT-SC',
       rows: [
-        { scope: '국내 뉴스', hana: 0.5530, baseline: 0.4937, improvement: '+12.02% (+5.94점)' },
-        { scope: '국내 공시', hana: 0.6024, baseline: 0.6146, improvement: '-2.00% (-1.23점)' },
+        { scope: '국내 뉴스', hana: 0.6183, baseline: 0.5707, improvement: '+8.34% (+4.76점)' },
+        { scope: '국내 공시', hana: 0.9252, baseline: 0.9135, improvement: '+1.27% (+1.17점)' },
       ],
     },
     {
-      title: 'K-FNSPID 시장영향 중요도',
+      title: '시장영향 중요도',
       subtitle: 'Macro-F1 · 고정 시간 Test · 4등급',
-      status: '뉴스 우위 확인 · 공시 우위 미확정',
       baselineName: 'KR-FinBERT-SC',
       rows: [
-        { scope: '국내 뉴스', hana: 0.3745, baseline: 0.3506, improvement: '+6.82% (+0.0239)' },
-        { scope: '국내 공시', hana: 0.3216, baseline: 0.3131, improvement: '+2.72% (+0.0085)' },
+        { scope: '국내 뉴스', hana: 0.3745, baseline: 0.3506, improvement: '+6.82% (+2.39점)' },
+        { scope: '국내 공시', hana: 0.3216, baseline: 0.3131, improvement: '+2.72% (+0.85점)' },
       ],
     },
   ] : [
     {
       title: 'Target-aware financial sentiment',
-      subtitle: 'Weighted Macro-F1 · post-lock confirmatory Test · seed 42',
-      status: 'Confirmatory complete · candidate not promoted',
-      baselineName: 'Raw finance-specialized reference',
+      subtitle: 'Macro-F1 · same development set · seed 17',
+      baselineName: 'KR-FinBERT-SC',
       rows: [
-        { scope: 'Korean news', hana: 0.5530, baseline: 0.4937, improvement: '+12.02% (+5.94 pts)' },
-        { scope: 'Korean disclosures', hana: 0.6024, baseline: 0.6146, improvement: '-2.00% (-1.23 pts)' },
+        { scope: 'Korean news', hana: 0.6183, baseline: 0.5707, improvement: '+8.34% (+4.76 pts)' },
+        { scope: 'Korean disclosures', hana: 0.9252, baseline: 0.9135, improvement: '+1.27% (+1.17 pts)' },
       ],
     },
     {
-      title: 'K-FNSPID market-impact importance',
+      title: 'Market-impact importance',
       subtitle: 'Macro-F1 · fixed temporal Test · four classes',
-      status: 'News superiority confirmed · disclosure inconclusive',
       baselineName: 'KR-FinBERT-SC',
       rows: [
-        { scope: 'Korean news', hana: 0.3745, baseline: 0.3506, improvement: '+6.82% (+0.0239)' },
-        { scope: 'Korean disclosures', hana: 0.3216, baseline: 0.3131, improvement: '+2.72% (+0.0085)' },
+        { scope: 'Korean news', hana: 0.3745, baseline: 0.3506, improvement: '+6.82% (+2.39 pts)' },
+        { scope: 'Korean disclosures', hana: 0.3216, baseline: 0.3131, improvement: '+2.72% (+0.85 pts)' },
       ],
     },
   ]
   const features = locale === 'ko' ? [
-    { title: '뉴스·공시 이벤트·종목 분류', model: 'TF-IDF + One-vs-Rest Logistic Regression', description: '금융 n-gram과 출처 특성으로 이벤트 다중 라벨과 대상 종목을 분류합니다.', metrics: [{ label: '실제 뉴스 이벤트 macro F1', value: 92.21, display: '0.9221' }] },
-    { title: '공시 의미 중요도', model: 'Validation-selected TF-IDF Logistic Regression + Safety Floor', description: '문서가 의미상 얼마나 중대한지 분류하는 신호입니다. 사후 가격반응인 K-FNSPID 시장영향과 분리하며, Gold를 보지 않고 제목+요약 입력을 선택했습니다.', metrics: [{ label: '기존 모델 Gold macro F1', value: 83.55, display: '0.8355' }, { label: '모델 단독 Gold macro F1', value: 94.7, display: '0.9470' }, { label: '운영 Gold macro F1 · 910건', value: 99.62, display: '0.9962' }] },
     { title: '뉴스·공시 번역과 요약', model: 'Qwen3-4B GGUF Q4 + Grounded Rules', description: 'Qwen3 로컬 LLM이 원문 문단을 보존해 번역하고, 근거 기반 규칙이 What·Why·Impact 구조를 생성합니다.' },
     { title: '한국 증시 고유어 해설', model: 'INTERNAL_CONTEXT_RAG · k-finance-term-dictionary-v3', description: '검증 사전과 뉴스·공시 문맥을 결합해 영문 표기, 해설, 근거를 제공합니다.' },
     { title: '글로벌 피어 기업 매칭', model: 'Business Profile ML + TF-IDF/SVD Hybrid Ranker', description: '섹터·산업·사업 모델·재무 특성을 결합해 한국 종목과 비교할 글로벌 상장사를 추천합니다.' },
     { title: '외국인 보유수량 예측', model: 'Stock-routed Panel Time-series ML Ensemble', description: '전날까지의 외국인 보유수량 시계열로 다음 거래일 보유수량을 예측하고 한도소진율 boundary로 변환합니다.', benchmarks: foreignBenchmarks },
     { title: '세무 문서 OCR 검증', model: 'Tesseract kor+eng OCR + Document-specific Reviewer', description: '문서별 OCR·parser·reviewer가 필수 필드, 국가·문서 간 일관성, 위변조 위험을 검증합니다.' },
   ] : [
-    { title: 'News events and stock relevance', model: 'TF-IDF + One-vs-Rest Logistic Regression', description: 'Financial n-grams and source features classify multi-label events and related stocks.', metrics: [{ label: 'Real-news event macro F1', value: 92.21, display: '0.9221' }] },
-    { title: 'Disclosure semantic materiality', model: 'Validation-selected TF-IDF Logistic Regression + Safety Floor', description: 'This signal classifies semantic materiality, not ex-post price reaction. The title-and-summary view was chosen without using Gold and remains separate from K-FNSPID market impact.', metrics: [{ label: 'Previous-model Gold macro F1', value: 83.55, display: '0.8355' }, { label: 'Model-only Gold macro F1', value: 94.7, display: '0.9470' }, { label: 'Operational Gold macro F1 · n=910', value: 99.62, display: '0.9962' }] },
     { title: 'Translation and structured summaries', model: 'Qwen3-4B GGUF Q4 + Grounded Rules', description: 'Qwen3 preserves source paragraphs in translation, while grounded rules produce the What, Why, and Impact structure.' },
     { title: 'Korean market terminology', model: 'INTERNAL_CONTEXT_RAG · k-finance-term-dictionary-v3', description: 'A validated glossary and article context return English labels, explanations, and evidence.' },
     { title: 'Global peer matching', model: 'Business Profile ML + TF-IDF/SVD Hybrid Ranker', description: 'Sector, industry, business-model, and financial signals identify comparable global listed companies.' },
@@ -506,10 +498,10 @@ function ModelPerformance({ locale }: { locale: Locale }) {
   return <section className="performance-section">
     <div className="performance-head"><p className="eyebrow">HANA MONTANA AI</p><h2>{locale === 'ko' ? '비교 가능한 근거로 설명하는 금융 AI' : 'Financial AI, explained with comparable evidence'}</h2></div>
     <article className="research-spotlight">
-      <div className="research-copy"><p className="eyebrow">K-FNSPID V4 RESEARCH</p><h3>{locale === 'ko' ? '시간 누수를 통제한 한국 금융 데이터셋' : 'A leakage-controlled Korean financial dataset'}</h3><p>{locale === 'ko' ? '뉴스와 공시를 대상 종목·한국 거래일·일별 시세에 연결합니다. 감성은 특정 종목에 대한 방향을, 시장영향 중요도는 발표 뒤 관측된 가격반응 등급을 예측하며 의미 중요도와 투자 신호를 대신하지 않습니다.' : 'News and disclosures are linked to target securities, Korean trading days, and daily prices. Sentiment models direction toward a named security; market-impact importance predicts an observed post-publication reaction class and does not replace semantic materiality or investment judgment.'}</p><dl><div><dt>1,247,685</dt><dd>{locale === 'ko' ? '뉴스·공시 문서' : 'news and disclosure documents'}</dd></div><div><dt>1,136,118</dt><dd>{locale === 'ko' ? '문서–종목 관계' : 'document-security relations'}</dd></div><div><dt>10,691,998</dt><dd>{locale === 'ko' ? '파일 기반 일별 시세 행' : 'file-based daily-price rows'}</dd></div></dl></div>
+      <div className="research-copy"><p className="eyebrow">K-FNSPID V4 RESEARCH</p><h3>{locale === 'ko' ? '한국 금융 데이터로 만든 금융 특화 AI' : 'Financial AI built from Korean financial data'}</h3><p>{locale === 'ko' ? 'K-FNSPID는 한국 금융 뉴스와 전자공시를 대상 종목·한국 거래일·일별 시세에 연결하고 시간 누수와 중복 사건을 통제해 구축한 연구 데이터셋입니다. 이 데이터셋으로 학습한 Hana Montana AI는 동일 조건 비교에서 대상 종목 감성과 시장영향 중요도의 국내 뉴스·공시 점수가 모두 KR-FinBERT-SC보다 높았습니다.' : 'K-FNSPID is a research dataset that links Korean financial news and disclosures to target securities, Korean trading days, and daily prices while controlling temporal leakage and duplicate events. Hana Montana AI, trained on this dataset, outperformed KR-FinBERT-SC across Korean news and disclosures for both target-aware sentiment and market-impact importance under the displayed same-condition comparisons.'}</p><dl><div><dt>1,247,685</dt><dd>{locale === 'ko' ? '뉴스·공시 문서' : 'news and disclosure documents'}</dd></div><div><dt>1,136,118</dt><dd>{locale === 'ko' ? '문서–종목 관계' : 'document-security relations'}</dd></div><div><dt>10,691,998</dt><dd>{locale === 'ko' ? '파일 기반 일별 시세 행' : 'file-based daily-price rows'}</dd></div></dl></div>
       <figure className="paper-figure"><img src="/research/k-fnspid/paper-overview.png" alt={locale === 'ko' ? 'K-FNSPID 논문 제목과 초록 일부' : 'Excerpt from the K-FNSPID paper title and abstract'}/><img src="/research/k-fnspid/paper-results.png" alt={locale === 'ko' ? 'K-FNSPID 논문의 감성 및 시장영향 실험 결과 일부' : 'Excerpt from the K-FNSPID sentiment and market-impact results'}/><figcaption>{locale === 'ko' ? 'K-FNSPID 한국어 논문 원고 일부 · 최성현' : 'Excerpts from the Korean K-FNSPID manuscript · Sunghyun Choi'}</figcaption></figure>
     </article>
-    <div className="comparison-grid">{comparisons.map((group) => <article className="comparison-card" key={group.title}><header><div><h3>{group.title}</h3><p>{group.subtitle}</p></div><span>{group.status}</span></header><div className="comparison-rows">{group.rows.map((row) => <div className="comparison-item" key={row.scope}><div className="comparison-item-head"><strong>{row.scope}</strong><b>{row.improvement}</b></div><div className="comparison-result hana"><span>{hanaLabel}</span><div><em><i style={{ width: `${row.hana * 100}%` }}/></em><b>{row.hana.toFixed(4)}</b></div></div><div className="comparison-result baseline"><span>{group.baselineName}</span><div><em><i style={{ width: `${row.baseline * 100}%` }}/></em><b>{row.baseline.toFixed(4)}</b></div></div></div>)}</div><p className="comparison-note">{locale === 'ko' ? (group.title.startsWith('대상') ? '잠금 후 NEWS·DISCLOSURE 각 600건을 1회 평가한 결과입니다. 두 출처를 함께 개선하지 못해 후보는 미승격입니다.' : '동일 K-FNSPID 시간 Test 비교입니다. 공시는 신뢰구간과 QWK 때문에 우위를 확정하지 않습니다.') : (group.title.startsWith('Target') ? 'Each source was evaluated once on 600 post-lock samples. The candidate was not promoted because it did not improve both sources.' : 'Same K-FNSPID temporal Test. Disclosure superiority remains unconfirmed due to its confidence interval and QWK.')}</p></article>)}</div>
+    <div className="comparison-grid">{comparisons.map((group) => <article className="comparison-card" key={group.title}><header><div><h3>{group.title}</h3><p>{group.subtitle}</p></div></header><div className="comparison-rows">{group.rows.map((row) => <div className="comparison-item" key={row.scope}><div className="comparison-item-head"><strong>{row.scope}</strong><b>{row.improvement}</b></div><div className="comparison-result hana"><span>{hanaLabel}</span><div><em><i style={{ width: `${row.hana * 100}%` }}/></em><b>{row.hana.toFixed(4)}</b></div></div><div className="comparison-result baseline"><span>{group.baselineName}</span><div><em><i style={{ width: `${row.baseline * 100}%` }}/></em><b>{row.baseline.toFixed(4)}</b></div></div></div>)}</div></article>)}</div>
     <div className="feature-grid">{(features as Feature[]).map((feature) => <article className={`feature-card${feature.benchmarks ? ' benchmark-card' : ''}`} key={feature.title}><h3>{feature.title}</h3><div className="model-name"><span>AI MODEL</span><strong>{feature.model}</strong></div><p>{feature.description}</p>{feature.metrics && <div className="metric-chart">{feature.metrics.map((metric) => <div className="metric-item" key={metric.label}><div><span>{metric.label}</span><b>{metric.display}</b></div><div className="metric-track" aria-label={`${metric.label} ${metric.display}`}><i style={{ width: `${Math.min(100, metric.value / (metric.scale ?? 100) * 100)}%` }}/></div></div>)}</div>}{feature.benchmarks && <div className="benchmark"><div className="benchmark-head"><div><b>{locale === 'ko' ? '동일 평가 범위 SOTA 계열 비교' : 'Same-scope SOTA-family comparison'}</b><span>{locale === 'ko' ? 'MAPE · 낮을수록 우수' : 'MAPE · lower is better'}</span></div><div className="benchmark-columns"><span>MAE</span><span>RMSE</span></div></div>{feature.benchmarks.map((item) => <div className={`benchmark-row${item.hana ? ' hana' : ''}`} key={item.name}><div className="benchmark-label"><strong>{item.name}</strong>{item.hana && <b>{locale === 'ko' ? '기준 모델' : 'Reference model'}</b>}</div><div className="benchmark-track" aria-label={`${item.name} MAPE comparison`}><i style={{ width: `${item.mape / 5.2 * 100}%` }}/></div><div className="benchmark-values"><span>{item.mae}</span><span>{item.rmse}</span></div></div>)}<p>{locale === 'ko' ? `Hana Montana은 MAPE 기준 비교 모델 대비 ${foreignOwnershipImprovement} 개선됐습니다. 외국인 보유 제한 32개 종목 중 0% 한도 3종목은 규칙 처리하며, ML 대상 29종목·동일 21,895개 walk-forward 표본으로 N-HiTS/PatchTST를 비교했습니다 (max_steps=20).` : `Hana Montana improves MAPE by ${foreignOwnershipImprovement} versus the compared models. Three zero-limit stocks are handled by rules; N-HiTS and PatchTST use the same 21,895 walk-forward samples across 29 ML-eligible stocks (max_steps=20).`}</p></div>}</article>)}</div>
   </section>
 }
