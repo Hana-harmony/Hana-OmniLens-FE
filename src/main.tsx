@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 import { ProductStory } from './product-story'
@@ -19,6 +19,10 @@ import {
 
 const apiBaseUrl = import.meta.env.VITE_OMNI_CONNECT_API_BASE_URL
 if (!apiBaseUrl) throw new Error('VITE_OMNI_CONNECT_API_BASE_URL is required')
+const sessionExpiredEvent = 'hana-omni-connect-session-expired'
+const signalUnauthorized = (response: Response) => {
+  if (response.status === 401) window.dispatchEvent(new Event(sessionExpiredEvent))
+}
 type Locale = 'ko' | 'en'
 type User = { userId: string; username: string; name: string; phoneNumber: string; role: 'MEMBER' | 'ADMIN' }
 type Session = { accessToken: string; expiresAt: string; passwordChangeRequired: boolean; user: User }
@@ -343,6 +347,7 @@ const endpoints: Endpoint[] = [
 async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(options.headers ?? {}) } })
   const payload = await response.json().catch(() => null) as { success: boolean; message: string; data: T } | null
+  signalUnauthorized(response)
   if (!payload) throw new Error(`API 응답을 확인하지 못했습니다. (${response.status})`)
   if (!response.ok || !payload.success) throw new Error(payload.message || '요청을 처리하지 못했습니다.')
   return payload.data
@@ -350,6 +355,7 @@ async function api<T>(path: string, options: RequestInit = {}, token?: string): 
 
 async function downloadCorrectionPdf(path: string, body: unknown, token: string): Promise<void> {
   const response = await fetch(`${apiBaseUrl}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) })
+  signalUnauthorized(response)
   if (!response.ok) { const payload = await response.json().catch(() => null) as { message?: string } | null; throw new Error(payload?.message || '경정청구서 PDF를 생성하지 못했습니다.') }
   const href = URL.createObjectURL(new Blob([await response.arrayBuffer()], { type: 'application/pdf' }))
   const anchor = document.createElement('a')
@@ -375,7 +381,8 @@ function storedSession(): Session | null {
 function useRoute(): [AppLocation, (route: Route, tab?: MemberTab | AdminTab) => void] {
   const [appLocation, setAppLocation] = useState<AppLocation>(() => parseAppLocation(location.hash))
   useEffect(() => { const listener = () => setAppLocation(parseAppLocation(location.hash)); addEventListener('hashchange', listener); return () => removeEventListener('hashchange', listener) }, [])
-  return [appLocation, (route, tab) => { location.hash = buildAppHash(route, tab) }]
+  const navigate = useCallback((route: Route, tab?: MemberTab | AdminTab) => { location.hash = buildAppHash(route, tab) }, [])
+  return [appLocation, navigate]
 }
 
 function App() {
@@ -384,9 +391,30 @@ function App() {
   const [locale, setLocale] = useState<Locale>(() => (localStorage.getItem('omni-connect-locale') as Locale) || 'ko')
   const [session, setSession] = useState<Session | null>(storedSession)
   const changeLocale = (next: Locale) => { setLocale(next); localStorage.setItem('omni-connect-locale', next) }
-  const signOut = () => { sessionStorage.removeItem('hana-omni-connect-session'); setSession(null); navigate('home') }
+  const clearSession = useCallback(() => { sessionStorage.removeItem('hana-omni-connect-session'); setSession(null); navigate('home') }, [navigate])
+  const signOut = () => {
+    const token = session?.accessToken
+    if (!token) { clearSession(); return }
+    void fetch(`${apiBaseUrl}/api/v1/portal/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      keepalive: true,
+    }).finally(clearSession)
+  }
   const updateSession = (next: Session) => { sessionStorage.setItem('hana-omni-connect-session', JSON.stringify(next)); setSession(next) }
   const passwordChanged = (next: Session) => { updateSession(next); navigate(next.user.role === 'ADMIN' ? 'admin' : 'portal') }
+  useEffect(() => {
+    if (!session) return
+    const remaining = Date.parse(session.expiresAt) - Date.now()
+    if (remaining <= 0) { clearSession(); return }
+    const timer = window.setTimeout(clearSession, Math.min(remaining, 2_147_483_647))
+    return () => window.clearTimeout(timer)
+  }, [clearSession, session])
+  useEffect(() => {
+    const listener = () => clearSession()
+    window.addEventListener(sessionExpiredEvent, listener)
+    return () => window.removeEventListener(sessionExpiredEvent, listener)
+  }, [clearSession])
   if (route === 'auth') return <AuthPage locale={locale} onLocale={changeLocale} onAuthenticated={(next) => { updateSession(next); navigate(next.passwordChangeRequired ? 'password' : next.user.role === 'ADMIN' ? 'admin' : 'portal') }} onHome={() => navigate('home')} />
   if (route === 'password' || session?.passwordChangeRequired) return <PasswordPage session={session} onChanged={passwordChanged} onHome={() => navigate('home')} onAdmin={(tab) => navigate('admin', tab)} onPortal={(tab) => navigate('portal', tab)} onSignOut={signOut} />
   if (route === 'docs') return <DocsPage locale={locale} onLocale={changeLocale} onHome={() => navigate('home')} />
@@ -836,7 +864,7 @@ function TaxAdmin({ cases, token, onChanged }: { cases: TaxCase[]; token: string
 }
 function SecureDocumentPreview({ document, caseId, token }: { document: VerifiedDocument; caseId: string; token: string }) {
   const [url, setUrl] = useState(''); const [failed, setFailed] = useState(false)
-  useEffect(() => { let active = true; let objectUrl = ''; setFailed(false); void fetch(`${apiBaseUrl}/api/v1/portal/admin/tax/refund-cases/${caseId}/documents/${document.documentId}`, { headers: { Authorization: `Bearer ${token}` } }).then(async (response) => { if (!response.ok) throw new Error('문서를 불러오지 못했습니다.'); objectUrl = URL.createObjectURL(await response.blob()); if (active) setUrl(objectUrl) }).catch(() => active && setFailed(true)); return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl) } }, [caseId, document.documentId, token])
+  useEffect(() => { let active = true; let objectUrl = ''; setFailed(false); void fetch(`${apiBaseUrl}/api/v1/portal/admin/tax/refund-cases/${caseId}/documents/${document.documentId}`, { headers: { Authorization: `Bearer ${token}` } }).then(async (response) => { signalUnauthorized(response); if (!response.ok) throw new Error('문서를 불러오지 못했습니다.'); objectUrl = URL.createObjectURL(await response.blob()); if (active) setUrl(objectUrl) }).catch(() => active && setFailed(true)); return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl) } }, [caseId, document.documentId, token])
   const pdf = document.fileName.toLowerCase().endsWith('.pdf')
   return <article><b>{documentTypeLabel(document.documentType)}</b><span>{document.fileName}</span>{url ? pdf ? <iframe title={document.fileName} src={url}/> : <img src={url} alt={document.fileName}/> : <div className={`document-loading${failed ? ' failed' : ''}`}>{failed ? '문서를 불러오지 못했습니다.' : '불러오는 중…'}</div>}</article>
 }
@@ -846,6 +874,7 @@ function CorrectionPdfEditor({ fields, token, onChange }: { fields: Record<strin
     let active = true; const objectUrls: string[] = []
     void api<CorrectionTemplateLayout>('/api/v1/portal/admin/tax/correction-request/template/layout', {}, token).then(async (nextLayout) => {
       const responses = await Promise.all(Array.from({ length: nextLayout.pageCount }, (_, index) => fetch(`${apiBaseUrl}/api/v1/portal/admin/tax/correction-request/template/pages/${index + 1}`, { headers: { Authorization: `Bearer ${token}` } })))
+      responses.forEach(signalUnauthorized)
       if (responses.some((response) => !response.ok)) throw new Error('경정청구서 양식을 불러오지 못했습니다.')
       for (const response of responses) objectUrls.push(URL.createObjectURL(await response.blob()))
       if (active) { setLayout(nextLayout); setPages([...objectUrls]); setError('') }

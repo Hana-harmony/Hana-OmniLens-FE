@@ -17,3 +17,11 @@ test('관리자 신청자 정보와 회원 파트너 ID를 구분한다', () => 
   assert.match(source, /item\.applicantUsername/)
   assert.match(source, /파트너 ID · \{item\.partnerId\}/)
 })
+
+test('포털은 현재 세션만 로그아웃하고 만료·401 응답을 즉시 정리한다', () => {
+  assert.match(source, /\/api\/v1\/portal\/logout/)
+  assert.match(source, /keepalive: true/)
+  assert.match(source, /Math\.min\(remaining, 2_147_483_647\)/)
+  assert.match(source, /sessionExpiredEvent/)
+  assert.match(source, /signalUnauthorized\(response\)/)
+})
