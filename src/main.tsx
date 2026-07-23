@@ -347,7 +347,7 @@ const endpoints: Endpoint[] = [
 async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(options.headers ?? {}) } })
   const payload = await response.json().catch(() => null) as { success: boolean; message: string; data: T } | null
-  signalUnauthorized(response)
+  if (token) signalUnauthorized(response)
   if (!payload) throw new Error(`API 응답을 확인하지 못했습니다. (${response.status})`)
   if (!response.ok || !payload.success) throw new Error(payload.message || '요청을 처리하지 못했습니다.')
   return payload.data
@@ -748,7 +748,12 @@ function AuthPage({ locale, onLocale, onAuthenticated, onHome }: { locale: Local
         ? { username: form.get('username'), password }
         : { username: form.get('username'), password, passwordConfirmation, name: form.get('name'), phoneNumber: `${countryCode} ${phone}` }
       onAuthenticated(await api<Session>(`/api/v1/portal/auth/${mode === 'login' ? 'login' : 'sign-up'}`, { method: 'POST', body: JSON.stringify(body) }))
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Authentication failed') } finally { setLoading(false) }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Authentication failed'
+      setMessage(/invalid username or password/i.test(reason)
+        ? locale === 'ko' ? '아이디 또는 비밀번호가 올바르지 않습니다.' : 'Invalid username or password.'
+        : reason)
+    } finally { setLoading(false) }
   }
   return <div className="auth-page"><div className="auth-brand"><Wordmark onClick={onHome} inverse/><div className="auth-orbit"><img src="/brand/hana-montana.png" alt="Hana Montana"/></div><h1>{locale === 'ko' ? '파트너와 함께 만드는\n금융 인텔리전스' : 'Financial intelligence,\nbuilt with partners'}</h1></div><main className="auth-panel"><div className="auth-top"><button onClick={onHome}>← {locale === 'ko' ? '홈으로' : 'Home'}</button><div className="language-switch"><button className={locale === 'ko' ? 'active' : ''} onClick={() => onLocale('ko')}>KO</button><button className={locale === 'en' ? 'active' : ''} onClick={() => onLocale('en')}>EN</button></div></div><form onSubmit={submit}><p className="eyebrow">PARTNER PORTAL</p><h2>{mode === 'login' ? (locale === 'ko' ? '로그인' : 'Sign in') : (locale === 'ko' ? '회원가입' : 'Create account')}</h2><p>{locale === 'ko' ? 'API 키를 신청하고 파트너 서비스를 관리하세요.' : 'Request API keys and manage your partner service.'}</p><label>{locale === 'ko' ? '아이디' : 'Username'}<input name="username" minLength={4} autoComplete="username" required/></label><label>{locale === 'ko' ? '비밀번호' : 'Password'}<input name="password" type="password" minLength={mode === 'login' ? 1 : 12} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required/></label>{mode === 'signup' && <><label>{locale === 'ko' ? '비밀번호 확인' : 'Confirm password'}<input name="passwordConfirmation" type="password" minLength={12} maxLength={128} autoComplete="new-password" required/></label><label>{locale === 'ko' ? '이름' : 'Name'}<input name="name" required/></label><label>{locale === 'ko' ? '전화번호' : 'Phone number'}<div className="phone-input"><select aria-label="국가번호" value={countryCode} onChange={(event) => { setCountryCode(event.target.value); setPhone('') }}><option value="+82">대한민국 +82</option><option value="+1">미국/캐나다 +1</option><option value="+81">일본 +81</option><option value="+44">영국 +44</option></select><input name="phoneNumber" inputMode="tel" value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} placeholder={countryCode === '+82' ? '010-1234-5678' : '323-555-1234'} required/></div></label></>}{message && <p className="form-error">{message}</p>}<button className="primary full" disabled={loading}>{loading ? '...' : mode === 'login' ? (locale === 'ko' ? '로그인' : 'Sign in') : (locale === 'ko' ? '회원가입' : 'Create account')}</button><button type="button" className="switch-auth" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setMessage('') }}>{mode === 'login' ? (locale === 'ko' ? '처음이신가요? 회원가입' : 'New partner? Create account') : (locale === 'ko' ? '이미 계정이 있나요? 로그인' : 'Already registered? Sign in')}</button></form></main></div>
 }
