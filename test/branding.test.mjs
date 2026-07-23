@@ -9,7 +9,7 @@ const figmaPhoneScreens = [
   'restrictions-order.png', 'restrictions-limit.png',
   'tax-intake-1.png', 'tax-intake-2.png', 'tax-intake-3.png', 'tax-intake-4.png',
   'tax-validation-1.png', 'tax-validation-2.png', 'tax-validation-3.png',
-  'tax-backoffice-monitoring.png', 'tax-backoffice-submit.png',
+  'tax-backoffice-submit.png',
 ]
 
 test('Omni-Connect 브랜드와 Figma 원본 아이폰 화면을 사용한다', async () => {
@@ -35,9 +35,12 @@ test('Omni-Connect 브랜드와 Figma 원본 아이폰 화면을 사용한다', 
   assert.match(story, /실시간으로 새로운 뉴스\/공시 발생 시 파이프라인을 통해 제공합니다/)
   assert.match(story, /OCR로 제출 서류의 정보를 자동 추출해 누락·오기입을 검증하고/)
   assert.match(story, /하나증권 백오피스에서 외국 금융사 고객별 경정청구 진행 현황을 실시간으로 모니터링하고/)
+  assert.match(story, /tax-backoffice', '제한세율 적용신청 처리 백오피스 화면', 'gif'/)
+  assert.doesNotMatch(story, /tax-backoffice-monitoring/)
 
   await access('public/brand/hana-omni-connect-api.png')
   await access('public/research/k-fnspid/paper-overview.png')
   await access('public/research/k-fnspid/paper-results.png')
+  await access('public/showcase/omni-connect-phones/tax-backoffice.gif')
   await Promise.all(figmaPhoneScreens.map((screen) => access(`public/showcase/omni-connect-phones/${screen}`)))
 })
